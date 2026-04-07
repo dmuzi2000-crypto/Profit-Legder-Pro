@@ -1,5 +1,5 @@
 // Stripe billing — set VITE_STRIPE_PUBLISHABLE_KEY in your .env to enable
-export const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+export const STRIPE_ENABLED = !!((import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY)
 
 export const PLANS = [
   {

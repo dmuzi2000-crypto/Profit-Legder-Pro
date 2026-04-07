@@ -13,7 +13,7 @@ export default function Settings() {
     e.preventDefault()
     if (!tenant) return
     setSaving(true)
-    const { error } = await supabase.from('tenants').update({ name: companyName }).eq('id', tenant.id)
+    const { error } = await (supabase as any).from('tenants').update({ name: companyName }).eq('id', tenant.id)
     if (error) toast.error(error.message)
     else { toast.success('Company name updated'); await refreshTenant() }
     setSaving(false)
@@ -28,7 +28,6 @@ export default function Settings() {
       <div style={{ flex: 1, overflowY: 'auto', padding: 28 }}>
         <div style={{ maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* Workspace */}
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 16, padding: 24 }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px' }}>Workspace</h2>
             <form onSubmit={handleSaveCompany} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -46,7 +45,6 @@ export default function Settings() {
             </form>
           </div>
 
-          {/* Account */}
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 16, padding: 24 }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px' }}>Account</h2>
             <div>
@@ -55,34 +53,29 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Plan — Coming Soon */}
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 16, padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <h2 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Subscription Plan</h2>
               <span style={{ fontSize: 10, fontFamily: 'DM Mono, monospace', background: 'rgba(245,166,35,0.1)', color: 'var(--amber)', border: '1px solid rgba(245,166,35,0.3)', borderRadius: 20, padding: '3px 10px' }}>BILLING COMING SOON</span>
             </div>
             <p style={{ fontSize: 12, color: 'var(--text3)', margin: '0 0 20px' }}>
-              All features are free during early access. Paid plans will be introduced soon — you'll be notified before any charges.
+              All features are free during early access. Paid plans coming soon.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-              {PLANS.map(plan => {
-                const isCurrent = plan.id === 'pro'
-                return (
-                  <div key={plan.id} style={{ border: `1px solid ${isCurrent ? 'var(--green)' : 'var(--border1)'}`, borderRadius: 12, padding: 16, background: isCurrent ? 'rgba(34,214,135,0.05)' : 'var(--bg3)' }}>
-                    <div style={{ fontSize: 10, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6 }}>{plan.name.toUpperCase()}</div>
-                    <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 22, marginBottom: 12, color: 'var(--text1)' }}>
-                      ${plan.price}<span style={{ fontSize: 12, fontFamily: 'Syne, sans-serif', color: 'var(--text3)' }}>/mo</span>
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'DM Mono, monospace' }}>
-                      {isCurrent ? '✓ FREE EARLY ACCESS' : 'COMING SOON'}
-                    </div>
+              {PLANS.map(plan => (
+                <div key={plan.id} style={{ border: `1px solid ${plan.featured ? 'var(--green)' : 'var(--border1)'}`, borderRadius: 12, padding: 16, background: plan.featured ? 'rgba(34,214,135,0.05)' : 'var(--bg3)' }}>
+                  <div style={{ fontSize: 10, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6 }}>{plan.name.toUpperCase()}</div>
+                  <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 22, marginBottom: 12, color: 'var(--text1)' }}>
+                    ${plan.price}<span style={{ fontSize: 12, fontFamily: 'Syne, sans-serif', color: 'var(--text3)' }}>/mo</span>
                   </div>
-                )
-              })}
+                  <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'DM Mono, monospace' }}>
+                    {plan.featured ? '✓ FREE EARLY ACCESS' : 'COMING SOON'}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Danger zone */}
           <div style={{ background: 'var(--bg2)', border: '1px solid rgba(240,79,79,0.3)', borderRadius: 16, padding: 24 }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 4px', color: 'var(--red)' }}>Danger Zone</h2>
             <p style={{ fontSize: 12, color: 'var(--text3)', margin: '0 0 16px' }}>These actions are irreversible.</p>

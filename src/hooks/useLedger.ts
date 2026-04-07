@@ -1,7 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import type { LedgerEntry } from '../types/database'
 import { useAuth } from './useAuth'
+
+export interface LedgerEntry {
+  id: string
+  tenant_id: string
+  sr_no: number
+  details: string
+  type: string
+  amount: number
+  created_at: string
+  created_by: string
+}
 
 export function useLedger() {
   const { tenant, user } = useAuth()
@@ -12,7 +22,7 @@ export function useLedger() {
   const fetchEntries = useCallback(async () => {
     if (!tenant) return
     setIsLoading(true)
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('ledger_entries')
       .select('*')
       .eq('tenant_id', tenant.id)
@@ -27,8 +37,8 @@ export function useLedger() {
 
   async function addEntry(details: string, type: string, amount: number) {
     if (!tenant || !user) return { error: 'Not authenticated' }
-    const maxSr = entries.length > 0 ? Math.max(...entries.map(e => e.sr_no)) : 0
-    const { error } = await supabase.from('ledger_entries').insert({
+    const maxSr = entries.length > 0 ? Math.max(...entries.map((e: LedgerEntry) => e.sr_no)) : 0
+    const { error } = await (supabase as any).from('ledger_entries').insert({
       tenant_id: tenant.id,
       created_by: user.id,
       sr_no: maxSr + 1,
@@ -40,19 +50,18 @@ export function useLedger() {
     return { error: error?.message ?? null }
   }
 
-  async function updateEntry(id: string, updates: Partial<Pick<LedgerEntry, 'details' | 'type' | 'amount'>>) {
-    const { error } = await supabase.from('ledger_entries').update(updates).eq('id', id)
+  async function updateEntry(id: string, updates: { details?: string; type?: string; amount?: number }) {
+    const { error } = await (supabase as any).from('ledger_entries').update(updates).eq('id', id)
     if (!error) await fetchEntries()
     return { error: error?.message ?? null }
   }
 
   async function deleteEntry(id: string) {
-    const { error } = await supabase.from('ledger_entries').delete().eq('id', id)
+    const { error } = await (supabase as any).from('ledger_entries').delete().eq('id', id)
     if (!error) await fetchEntries()
     return { error: error?.message ?? null }
   }
 
-  // Computed totals
   const totals = {
     revenue: entries.filter(e => e.type === 'Revenue' || e.type === 'Other Income').reduce((s, e) => s + e.amount, 0),
     cogs: entries.filter(e => e.type === 'Cost of Sales').reduce((s, e) => s + e.amount, 0),

@@ -1,7 +1,22 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import type { Tenant, TenantMember } from '../types/database'
+
+interface Tenant {
+  id: string
+  name: string
+  plan: string
+  owner_id: string
+  created_at: string
+}
+
+interface TenantMember {
+  id: string
+  tenant_id: string
+  user_id: string
+  role: string
+  created_at: string
+}
 
 interface AuthContextType {
   user: User | null
@@ -25,15 +40,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   async function loadTenant(userId: string) {
-    const { data: memberData } = await supabase
-      .from('tenant_members')
-      .select('*, tenants(*)')
-      .eq('user_id', userId)
-      .single()
+    try {
+      const { data } = await supabase
+        .from('tenant_members')
+        .select('*, tenants(*)')
+        .eq('user_id', userId)
+        .single()
 
-    if (memberData) {
-      setMember(memberData as TenantMember)
-      setTenant((memberData as any).tenants as Tenant)
+      if (data) {
+        const { tenants: tenantData, ...memberData } = data as any
+        setMember(memberData as TenantMember)
+        setTenant(tenantData as Tenant)
+      }
+    } catch {
+      // no tenant yet
     }
   }
 
@@ -68,27 +88,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signUp(email: string, password: string, companyName: string) {
     const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) return { error }
+    if (error) return { error: error as Error }
     if (!data.user) return { error: new Error('Signup failed') }
 
-    // Create the tenant (workspace) for this new user
-    const { data: tenantData, error: tenantError } = await supabase
+    const { data: tenantData, error: tenantError } = await (supabase as any)
       .from('tenants')
       .insert({ name: companyName, owner_id: data.user.id, plan: 'starter' })
       .select()
       .single()
 
-    if (tenantError) return { error: tenantError }
+    if (tenantError) return { error: tenantError as Error }
 
-    // Add user as owner member
-    await supabase.from('tenant_members').insert({
+    await (supabase as any).from('tenant_members').insert({
       tenant_id: tenantData.id,
       user_id: data.user.id,
       role: 'owner',
     })
 
-    // Create initial free subscription record
-    await supabase.from('subscriptions').insert({
+    await (supabase as any).from('subscriptions').insert({
       tenant_id: tenantData.id,
       plan: 'starter',
       status: 'trialing',

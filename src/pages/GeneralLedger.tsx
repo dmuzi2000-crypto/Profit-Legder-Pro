@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
 import { useLedger } from '../hooks/useLedger'
-import { ENTRY_TYPES } from '../types/database'
-import type { LedgerEntry } from '../types/database'
+const ENTRY_TYPES = ['Revenue','Cost of Sales','Operational Expenses','Other Income','Interest Expense','Tax Expense'] as const
+import type { LedgerEntry } from '../hooks/useLedger'
 
 function fmt(n: number) {
   return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
