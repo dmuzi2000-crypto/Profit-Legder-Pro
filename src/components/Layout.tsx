@@ -1,10 +1,13 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { LayoutDashboard, BookOpen, TrendingUp, List, Users, Settings, LogOut } from 'lucide-react'
+import { useLedger } from '../hooks/useLedger'
+import RecordPayments from '../pages/RecordPayments'
+import { LayoutDashboard, BookOpen, TrendingUp, List, Users, Settings, LogOut, CreditCard } from 'lucide-react'
 
 const NAV = [
   { to: '/app/dashboard',         icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/app/ledger',            icon: BookOpen,        label: 'General Ledger' },
+  { to: '/app/transactions',      icon: BookOpen,        label: 'Transactions' },
   { to: '/app/income-statement',  icon: TrendingUp,      label: 'Income Statement' },
   { to: '/app/chart-of-accounts', icon: List,            label: 'Chart of Accounts' },
   { to: '/app/vendors-customers', icon: Users,           label: 'Vendors & Customers' },
@@ -12,13 +15,25 @@ const NAV = [
 
 export default function Layout() {
   const { tenant, member, user, signOut } = useAuth()
+  const { entries } = useLedger()
   const navigate = useNavigate()
+  const [showPayments, setShowPayments] = useState(false)
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'U'
+
+  const unpaidCount = entries.filter(e => e.payment_status !== 'paid').length
 
   async function handleSignOut() {
     await signOut()
     navigate('/')
   }
+
+  const linkStyle = (isActive: boolean) => ({
+    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8,
+    textDecoration: 'none', fontSize: 13, fontWeight: 500, marginBottom: 2, transition: 'all 0.15s',
+    background: isActive ? 'rgba(34,214,135,0.08)' : 'transparent',
+    color: isActive ? 'var(--green)' : 'var(--text2)',
+    border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' as const, font: 'inherit'
+  })
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg1)' }}>
@@ -43,22 +58,24 @@ export default function Layout() {
         <nav style={{ flex: 1, padding: '8px 10px' }}>
           <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono, monospace', letterSpacing: '1px', padding: '6px 10px 4px', marginTop: 4 }}>MAIN</div>
           {NAV.map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} style={({ isActive }) => ({
-              display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8,
-              textDecoration: 'none', fontSize: 13, fontWeight: 500, marginBottom: 2, transition: 'all 0.15s',
-              background: isActive ? 'rgba(34,214,135,0.08)' : 'transparent',
-              color: isActive ? 'var(--green)' : 'var(--text2)',
-            })}>
+            <NavLink key={to} to={to} style={({ isActive }) => linkStyle(isActive)}>
               <Icon size={16} />{label}
             </NavLink>
           ))}
           <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono, monospace', letterSpacing: '1px', padding: '6px 10px 4px', marginTop: 8 }}>ACCOUNT</div>
-          <NavLink to="/app/settings" style={({ isActive }) => ({
-            display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8,
-            textDecoration: 'none', fontSize: 13, fontWeight: 500, marginBottom: 2, transition: 'all 0.15s',
-            background: isActive ? 'rgba(34,214,135,0.08)' : 'transparent',
-            color: isActive ? 'var(--green)' : 'var(--text2)',
-          })}>
+          
+          <button onClick={() => setShowPayments(true)} style={linkStyle(showPayments)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+              <CreditCard size={16} />Record Payments
+            </div>
+            {unpaidCount > 0 && (
+              <span style={{ background: 'var(--amber)', color: '#000', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10, fontFamily: 'DM Mono, monospace' }}>
+                {unpaidCount}
+              </span>
+            )}
+          </button>
+
+          <NavLink to="/app/settings" style={({ isActive }) => linkStyle(isActive)}>
             <Settings size={16} />Settings
           </NavLink>
         </nav>
@@ -82,6 +99,8 @@ export default function Layout() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Outlet />
       </div>
+
+      <RecordPayments isOpen={showPayments} onClose={() => setShowPayments(false)} />
     </div>
   )
 }

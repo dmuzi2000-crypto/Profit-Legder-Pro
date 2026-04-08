@@ -24,7 +24,8 @@ export default function Dashboard() {
   const kpis = [
     { label: 'TOTAL REVENUE', value: fmt(totals.revenue), positive: true },
     { label: 'GROSS PROFIT', value: fmt(totals.grossProfit), positive: totals.grossProfit >= 0 },
-    { label: 'TOTAL EXPENSES', value: fmt(Math.abs(totals.cogs + totals.opex + totals.interest + totals.tax)), positive: false, neutral: true },
+    { label: 'OUTSTANDING A/R', value: fmt(totals.outstandingAR), positive: false, amber: totals.outstandingAR > 0 },
+    { label: 'OUTSTANDING A/P', value: fmt(totals.outstandingAP), positive: false, amber: totals.outstandingAP > 0 },
     { label: 'NET PROFIT', value: fmt(totals.netProfit), positive: totals.netProfit >= 0 },
   ]
 
@@ -38,11 +39,11 @@ export default function Dashboard() {
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 28 }}>
         {/* KPI grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, marginBottom: 24 }}>
           {kpis.map(k => (
             <div key={k.label} style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 16, padding: 20 }}>
               <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono, monospace', letterSpacing: '0.5px', marginBottom: 10 }}>{k.label}</div>
-              <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: -1, fontFamily: 'DM Serif Display, serif', color: k.neutral ? 'var(--text1)' : k.positive ? 'var(--green)' : 'var(--red)' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: -1, fontFamily: 'DM Serif Display, serif', color: (k as any).amber ? 'var(--amber)' : k.positive ? 'var(--green)' : 'var(--text1)' }}>
                 {isLoading ? '—' : k.value}
               </div>
             </div>

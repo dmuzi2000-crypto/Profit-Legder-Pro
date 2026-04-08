@@ -6,7 +6,7 @@ import AuthPage from './pages/AuthPage'
 import Onboarding from './pages/Onboarding'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
-import GeneralLedger from './pages/GeneralLedger'
+import Transactions from './pages/Transactions'
 import IncomeStatement from './pages/IncomeStatement'
 import ChartOfAccounts from './pages/ChartOfAccounts'
 import VendorsCustomers from './pages/VendorsCustomers'
@@ -38,7 +38,7 @@ export default function App() {
         <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="ledger" element={<GeneralLedger />} />
+          <Route path="transactions" element={<Transactions />} />
           <Route path="income-statement" element={<IncomeStatement />} />
           <Route path="chart-of-accounts" element={<ChartOfAccounts />} />
           <Route path="vendors-customers" element={<VendorsCustomers />} />
