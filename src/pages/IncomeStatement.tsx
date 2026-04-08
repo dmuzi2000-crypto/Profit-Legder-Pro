@@ -11,6 +11,18 @@ function fmtSigned(n: number) {
   return (n < 0 ? '- ' : '') + '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+function parseLocal(ds: string) {
+  const [y, m, d] = ds.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function toDS(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 const IS_SECTIONS = [
   { title: 'Revenue',            subcat: 'Operating Revenue', isExpense: false },
   { title: 'Cost of Goods Sold', subcat: 'Cost of Sales',     isExpense: true  },
@@ -40,24 +52,24 @@ export default function IncomeStatement() {
   const { entries, isLoading } = useLedger()
   const { accounts } = useAccounts()
   
-  const [from, setFrom] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
-  const [to, setTo] = useState(new Date().toISOString().split('T')[0])
+  const [from, setFrom] = useState(toDS(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
+  const [to, setTo] = useState(toDS(new Date()))
 
   const quickSelect = (type: string) => {
     const d = new Date()
     if (type === 'this-month') {
-      setFrom(new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0])
-      setTo(d.toISOString().split('T')[0])
+      setFrom(toDS(new Date(d.getFullYear(), d.getMonth(), 1)))
+      setTo(toDS(d))
     } else if (type === 'last-month') {
-      setFrom(new Date(d.getFullYear(), d.getMonth() - 1, 1).toISOString().split('T')[0])
-      setTo(new Date(d.getFullYear(), d.getMonth(), 0).toISOString().split('T')[0])
+      setFrom(toDS(new Date(d.getFullYear(), d.getMonth() - 1, 1)))
+      setTo(toDS(new Date(d.getFullYear(), d.getMonth(), 0)))
     } else if (type === 'this-quarter') {
       const q = Math.floor(d.getMonth() / 3)
-      setFrom(new Date(d.getFullYear(), q * 3, 1).toISOString().split('T')[0])
-      setTo(d.toISOString().split('T')[0])
+      setFrom(toDS(new Date(d.getFullYear(), q * 3, 1)))
+      setTo(toDS(d))
     } else if (type === 'this-year') {
-      setFrom(new Date(d.getFullYear(), 0, 1).toISOString().split('T')[0])
-      setTo(d.toISOString().split('T')[0])
+      setFrom(toDS(new Date(d.getFullYear(), 0, 1)))
+      setTo(toDS(d))
     }
   }
 
@@ -110,7 +122,7 @@ export default function IncomeStatement() {
           <div style={{ textAlign: 'center', marginBottom: 28, borderBottom: '1px solid var(--border1)', paddingBottom: 20 }}>
             <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 24, fontWeight: 400, margin: '0 0 4px' }}>Income Statement</h2>
             <p style={{ color: 'var(--text3)', fontSize: 12, fontFamily: 'DM Mono, monospace', margin: 0 }}>
-              For the period {new Date(from).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} to {new Date(to).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              For the period {parseLocal(from).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} to {parseLocal(to).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
 
