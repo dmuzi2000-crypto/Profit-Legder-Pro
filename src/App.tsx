@@ -8,11 +8,12 @@ import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import GeneralLedger from './pages/GeneralLedger'
 import IncomeStatement from './pages/IncomeStatement'
+import ChartOfAccounts from './pages/ChartOfAccounts'
+import VendorsCustomers from './pages/VendorsCustomers'
 import Settings from './pages/Settings'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, tenant, isLoading } = useAuth()
-
   if (isLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg1)' }}>
       <div style={{ textAlign: 'center' }}>
@@ -22,7 +23,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
-
   if (!user) return <Navigate to="/auth" replace />
   if (!tenant) return <Navigate to="/onboarding" replace />
   return <>{children}</>
@@ -40,6 +40,8 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="ledger" element={<GeneralLedger />} />
           <Route path="income-statement" element={<IncomeStatement />} />
+          <Route path="chart-of-accounts" element={<ChartOfAccounts />} />
+          <Route path="vendors-customers" element={<VendorsCustomers />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

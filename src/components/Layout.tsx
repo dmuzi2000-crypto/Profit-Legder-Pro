@@ -1,17 +1,18 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { LayoutDashboard, BookOpen, TrendingUp, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, BookOpen, TrendingUp, List, Users, Settings, LogOut } from 'lucide-react'
 
 const NAV = [
-  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/app/ledger', icon: BookOpen, label: 'General Ledger' },
-  { to: '/app/income-statement', icon: TrendingUp, label: 'Income Statement' },
+  { to: '/app/dashboard',         icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/app/ledger',            icon: BookOpen,        label: 'General Ledger' },
+  { to: '/app/income-statement',  icon: TrendingUp,      label: 'Income Statement' },
+  { to: '/app/chart-of-accounts', icon: List,            label: 'Chart of Accounts' },
+  { to: '/app/vendors-customers', icon: Users,           label: 'Vendors & Customers' },
 ]
 
 export default function Layout() {
   const { tenant, member, user, signOut } = useAuth()
   const navigate = useNavigate()
-
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'U'
 
   async function handleSignOut() {
@@ -21,9 +22,7 @@ export default function Layout() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg1)' }}>
-      {/* Sidebar */}
       <aside style={{ width: 220, minWidth: 220, background: 'var(--bg2)', borderRight: '1px solid var(--border1)', display: 'flex', flexDirection: 'column' }}>
-        {/* Logo */}
         <div style={{ padding: '20px 16px', borderBottom: '1px solid var(--border1)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 30, height: 30, background: 'var(--green)', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -36,39 +35,34 @@ export default function Layout() {
           </div>
         </div>
 
-        {/* Tenant badge */}
         <div style={{ margin: 12, background: 'var(--bg3)', border: '1px solid var(--border1)', borderRadius: 10, padding: '10px 12px' }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tenant?.name ?? '...'}</div>
-          <div style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'DM Mono, monospace', marginTop: 2, letterSpacing: '0.3px' }}>{(tenant?.plan ?? 'starter').toUpperCase()} PLAN</div>
+          <div style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'DM Mono, monospace', marginTop: 2 }}>{(tenant?.plan ?? 'starter').toUpperCase()} PLAN</div>
         </div>
 
-        {/* Nav */}
         <nav style={{ flex: 1, padding: '8px 10px' }}>
           <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono, monospace', letterSpacing: '1px', padding: '6px 10px 4px', marginTop: 4 }}>MAIN</div>
           {NAV.map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} style={({ isActive }) => ({
-              display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8, textDecoration: 'none',
-              fontSize: 13, fontWeight: 500, marginBottom: 2, transition: 'all 0.15s',
+              display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8,
+              textDecoration: 'none', fontSize: 13, fontWeight: 500, marginBottom: 2, transition: 'all 0.15s',
               background: isActive ? 'rgba(34,214,135,0.08)' : 'transparent',
               color: isActive ? 'var(--green)' : 'var(--text2)',
             })}>
-              <Icon size={16} />
-              {label}
+              <Icon size={16} />{label}
             </NavLink>
           ))}
           <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono, monospace', letterSpacing: '1px', padding: '6px 10px 4px', marginTop: 8 }}>ACCOUNT</div>
           <NavLink to="/app/settings" style={({ isActive }) => ({
-            display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8, textDecoration: 'none',
-            fontSize: 13, fontWeight: 500, marginBottom: 2, transition: 'all 0.15s',
+            display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8,
+            textDecoration: 'none', fontSize: 13, fontWeight: 500, marginBottom: 2, transition: 'all 0.15s',
             background: isActive ? 'rgba(34,214,135,0.08)' : 'transparent',
             color: isActive ? 'var(--green)' : 'var(--text2)',
           })}>
-            <Settings size={16} />
-            Settings
+            <Settings size={16} />Settings
           </NavLink>
         </nav>
 
-        {/* User footer */}
         <div style={{ padding: 14, borderTop: '1px solid var(--border1)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(167,139,250,0.15)', border: '1px solid var(--purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--purple)', flexShrink: 0 }}>{initials}</div>
@@ -76,7 +70,7 @@ export default function Layout() {
               <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div>
               <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono, monospace' }}>{member?.role ?? 'member'}</div>
             </div>
-            <button onClick={handleSignOut} title="Sign out" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', borderRadius: 4, transition: 'color 0.15s' }}
+            <button onClick={handleSignOut} title="Sign out" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', borderRadius: 4 }}
               onMouseEnter={e => (e.currentTarget.style.color = 'var(--red)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--text3)')}>
               <LogOut size={14} />
@@ -85,7 +79,6 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Outlet />
       </div>
