@@ -32,7 +32,7 @@ const TYPE_STYLE: Record<ContactType, { bg: string; color: string }> = {
   Both:     { bg: 'rgba(91,143,255,0.1)',  color: 'var(--blue)' },
 }
 
-const EMPTY = { type: 'Customer' as ContactType, name: '', email: '', phone: '', company: '', address: '', balance: '', status: 'Active' as const }
+const EMPTY = { type: 'Customer' as ContactType, name: '', email: '', phone: '', company: '', address: '', balance: '', status: 'Active' as 'Active' | 'Inactive' }
 
 function fmt(n: number) {
   return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2 })
