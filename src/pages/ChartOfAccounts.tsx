@@ -1,54 +1,9 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
+import { useAccounts, CATEGORIES, SUBCATEGORIES, CAT_COLORS } from '../contexts/AccountsContext'
+import type { Account, Category } from '../contexts/AccountsContext'
 
-interface Account {
-  id: string
-  code: string
-  name: string
-  category: 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense'
-  subcategory: string
-  balance: number
-}
-
-const CATEGORIES = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'] as const
-type Category = typeof CATEGORIES[number]
-
-const SUBCATEGORIES: Record<Category, string[]> = {
-  Asset: ['Current Asset', 'Fixed Asset', 'Other Asset'],
-  Liability: ['Current Liability', 'Long-term Liability'],
-  Equity: ['Owner Equity', 'Retained Earnings'],
-  Revenue: ['Operating Revenue', 'Other Income'],
-  Expense: ['Cost of Sales', 'Operating Expense', 'Interest Expense', 'Tax Expense'],
-}
-
-const CAT_COLORS: Record<Category, { bg: string; color: string }> = {
-  Asset:     { bg: 'rgba(34,214,135,0.1)',  color: 'var(--green)' },
-  Liability: { bg: 'rgba(240,79,79,0.1)',   color: 'var(--red)' },
-  Equity:    { bg: 'rgba(167,139,250,0.1)', color: 'var(--purple)' },
-  Revenue:   { bg: 'rgba(91,143,255,0.1)',  color: 'var(--blue)' },
-  Expense:   { bg: 'rgba(245,166,35,0.1)',  color: 'var(--amber)' },
-}
-
-const SEED: Account[] = [
-  { id: '1', code: '1000', name: 'Cash & Bank',           category: 'Asset',     subcategory: 'Current Asset',     balance: 84200 },
-  { id: '2', code: '1100', name: 'Accounts Receivable',   category: 'Asset',     subcategory: 'Current Asset',     balance: 32400 },
-  { id: '3', code: '1200', name: 'Inventory',             category: 'Asset',     subcategory: 'Current Asset',     balance: 18600 },
-  { id: '4', code: '1500', name: 'Equipment',             category: 'Asset',     subcategory: 'Fixed Asset',       balance: 45000 },
-  { id: '5', code: '2000', name: 'Accounts Payable',      category: 'Liability', subcategory: 'Current Liability', balance: 14300 },
-  { id: '6', code: '2100', name: 'Accrued Expenses',      category: 'Liability', subcategory: 'Current Liability', balance: 6200 },
-  { id: '7', code: '2500', name: 'Long-term Loan',        category: 'Liability', subcategory: 'Long-term Liability', balance: 50000 },
-  { id: '8', code: '3000', name: "Owner's Capital",       category: 'Equity',    subcategory: 'Owner Equity',      balance: 75000 },
-  { id: '9', code: '3100', name: 'Retained Earnings',     category: 'Equity',    subcategory: 'Retained Earnings', balance: 34700 },
-  { id:'10', code: '4000', name: 'Product Sales',         category: 'Revenue',   subcategory: 'Operating Revenue', balance: 142500 },
-  { id:'11', code: '4100', name: 'Service Revenue',       category: 'Revenue',   subcategory: 'Operating Revenue', balance: 38200 },
-  { id:'12', code: '5000', name: 'Cost of Goods Sold',    category: 'Expense',   subcategory: 'Cost of Sales',     balance: 62000 },
-  { id:'13', code: '6000', name: 'Payroll',               category: 'Expense',   subcategory: 'Operating Expense', balance: 45000 },
-  { id:'14', code: '6100', name: 'Software Subscriptions',category: 'Expense',   subcategory: 'Operating Expense', balance: 8200 },
-  { id:'15', code: '6200', name: 'Rent & Utilities',      category: 'Expense',   subcategory: 'Operating Expense', balance: 12000 },
-  { id:'16', code: '7000', name: 'Interest Expense',      category: 'Expense',   subcategory: 'Interest Expense',  balance: 3400 },
-  { id:'17', code: '8000', name: 'Income Tax',            category: 'Expense',   subcategory: 'Tax Expense',       balance: 14800 },
-]
 
 function fmt(n: number) {
   return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2 })
@@ -57,7 +12,7 @@ function fmt(n: number) {
 const EMPTY = { code: '', name: '', category: 'Asset' as Category, subcategory: 'Current Asset', balance: '' }
 
 export default function ChartOfAccounts() {
-  const [accounts, setAccounts] = useState<Account[]>(SEED)
+  const { accounts, addAccount, updateAccount, deleteAccount } = useAccounts()
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [editId, setEditId] = useState<string | null>(null)
@@ -79,15 +34,13 @@ export default function ChartOfAccounts() {
   function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!form.code || !form.name) return
-    const newAcc: Account = {
-      id: Date.now().toString(),
+    addAccount({
       code: form.code,
       name: form.name,
       category: form.category,
       subcategory: form.subcategory,
       balance: parseFloat(String(form.balance)) || 0,
-    }
-    setAccounts(a => [...a, newAcc].sort((x, y) => x.code.localeCompare(y.code)))
+    })
     toast.success('Account added')
     setShowModal(false)
     setForm(EMPTY)
@@ -95,12 +48,12 @@ export default function ChartOfAccounts() {
 
   function handleDelete(id: string) {
     if (!confirm('Delete this account?')) return
-    setAccounts(a => a.filter(x => x.id !== id))
+    deleteAccount(id)
     toast.success('Account deleted')
   }
 
   function handleEditSave(id: string) {
-    setAccounts(a => a.map(x => x.id === id ? { ...x, ...editForm } : x))
+    updateAccount(id, editForm)
     toast.success('Account updated')
     setEditId(null)
   }

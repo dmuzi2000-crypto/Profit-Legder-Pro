@@ -2,6 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useLedger } from '../hooks/useLedger'
+import { AccountsProvider } from '../contexts/AccountsContext'
 import RecordPayments from '../pages/RecordPayments'
 import { LayoutDashboard, BookOpen, TrendingUp, List, Users, Settings, LogOut, CreditCard } from 'lucide-react'
 
@@ -36,6 +37,7 @@ export default function Layout() {
   })
 
   return (
+    <AccountsProvider>
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg1)' }}>
       <aside style={{ width: 220, minWidth: 220, background: 'var(--bg2)', borderRight: '1px solid var(--border1)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px 16px', borderBottom: '1px solid var(--border1)' }}>
@@ -102,5 +104,6 @@ export default function Layout() {
 
       <RecordPayments isOpen={showPayments} onClose={() => setShowPayments(false)} />
     </div>
+    </AccountsProvider>
   )
 }
