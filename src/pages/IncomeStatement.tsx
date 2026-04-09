@@ -161,9 +161,6 @@ export default function IncomeStatement() {
                   <div key={section.subcat} style={{ marginBottom: 24 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 16px', background: 'var(--bg3)', borderRadius: 8, marginBottom: 2 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text1)' }}>{section.title}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'DM Mono, monospace', color }}>
-                        {section.isExpense && sectionTotal > 0 ? '- ' : ''}{fmtPos(sectionTotal)}
-                      </span>
                     </div>
 
                     {rows.map(({ acc, sum }) => (
