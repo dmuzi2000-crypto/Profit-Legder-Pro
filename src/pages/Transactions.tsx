@@ -3,8 +3,9 @@ import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
 import { useLedger } from '../hooks/useLedger'
-import type { LedgerEntry } from '../hooks/useLedger'
+import { LedgerEntry } from '../hooks/useLedger'
 import AddTransactionModal from '../components/modals/AddTransactionModal'
+import RecordPayments from './RecordPayments'
 
 function fmtAmt(n: number) {
   return '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -39,22 +40,16 @@ export default function Transactions() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { entries, isLoading, updateEntry, deleteEntry } = useLedger()
   const [showModal, setShowModal] = useState(false)
+  const [showPayments, setShowPayments] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<LedgerEntry>>({})
 
   useEffect(() => {
     if (searchParams.get('action') === 'record-payment') {
-      setShowModal(true)
+      setShowPayments(true)
+      setSearchParams({})
     }
-  }, [searchParams])
-
-  const handleCloseModal = () => {
-    setShowModal(false)
-    if (searchParams.has('action')) {
-      searchParams.delete('action')
-      setSearchParams(searchParams)
-    }
-  }
+  }, [searchParams, setSearchParams])
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this transaction?')) return
@@ -149,7 +144,8 @@ export default function Transactions() {
         </div>
       </div>
 
-      <AddTransactionModal isOpen={showModal} onClose={handleCloseModal} />
+      <AddTransactionModal isOpen={showModal} onClose={() => setShowModal(false)} />
+      <RecordPayments isOpen={showPayments} onClose={() => setShowPayments(false)} />
     </div>
   )
 }
