@@ -1,6 +1,10 @@
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { Plus } from 'lucide-react'
 import { useLedger } from '../hooks/useLedger'
 import { useAuth } from '../hooks/useAuth'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import AddTransactionModal from '../components/modals/AddTransactionModal'
 
 function fmt(n: number) {
   return (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString()
@@ -18,6 +22,7 @@ const MONTHLY_DEMO = [
 export default function Dashboard() {
   const { tenant } = useAuth()
   const { entries, totals, isLoading } = useLedger()
+  const [showTransactionModal, setShowTransactionModal] = useState(false)
 
   const recentEntries = [...entries].reverse().slice(0, 6)
 
@@ -32,9 +37,18 @@ export default function Dashboard() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       {/* Topbar */}
-      <div style={{ height: 56, background: 'var(--bg2)', borderBottom: '1px solid var(--border1)', display: 'flex', alignItems: 'center', padding: '0 28px' }}>
+      <div style={{ height: 56, background: 'var(--bg2)', borderBottom: '1px solid var(--border1)', display: 'flex', alignItems: 'center', padding: '0 28px', gap: 12 }}>
         <h1 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Dashboard</h1>
-        <span style={{ marginLeft: 12, fontSize: 11, color: 'var(--text3)', fontFamily: 'DM Mono, monospace' }}>{tenant?.name}</span>
+        <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'DM Mono, monospace', flex: 1 }}>{tenant?.name}</span>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setShowTransactionModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green)', border: 'none', borderRadius: 8, color: '#0a0c10', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
+            <Plus size={14} /> Record Transaction
+          </button>
+          <button onClick={() => toast.info('Payment recording coming soon')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'transparent', border: '1px solid var(--blue)', borderRadius: 8, color: 'var(--blue)', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
+            <Plus size={14} /> Record Payment
+          </button>
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 28 }}>
@@ -103,6 +117,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <AddTransactionModal isOpen={showTransactionModal} onClose={() => setShowTransactionModal(false)} />
     </div>
   )
 }

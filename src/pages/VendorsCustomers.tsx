@@ -1,35 +1,13 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Check, Building2, User } from 'lucide-react'
-
-type ContactType = 'Customer' | 'Vendor' | 'Both'
-
-interface Contact {
-  id: string
-  type: ContactType
-  name: string
-  email: string
-  phone: string
-  company: string
-  address: string
-  balance: number // positive = they owe us (A/R), negative = we owe them (A/P)
-  status: 'Active' | 'Inactive'
-}
-
-const SEED: Contact[] = [
-  { id:'1', type:'Customer', name:'James Whitfield',   email:'j.whitfield@acme.com',  phone:'+1 555-0101', company:'Acme Corp',       address:'123 Main St, NY', balance: 8400,  status:'Active' },
-  { id:'2', type:'Customer', name:'Sara Patel',        email:'sara@techwave.io',       phone:'+1 555-0142', company:'TechWave Inc',     address:'456 Oak Ave, CA', balance: 12600, status:'Active' },
-  { id:'3', type:'Customer', name:'Marco Rossi',       email:'marco@globaltraders.eu', phone:'+44 7700 900', company:'Global Traders',  address:'1 Bond St, London', balance: 3200, status:'Active' },
-  { id:'4', type:'Vendor',   name:'Office Depot',      email:'ap@officedepot.com',     phone:'+1 800-463-3768', company:'Office Depot', address:'200 Supply Rd, TX', balance:-2100, status:'Active' },
-  { id:'5', type:'Vendor',   name:'AWS',               email:'billing@aws.amazon.com', phone:'+1 206-266-1000', company:'Amazon',       address:'410 Terry Ave N, WA', balance:-4800, status:'Active' },
-  { id:'6', type:'Both',     name:'DataSync Ltd',      email:'hello@datasync.io',      phone:'+1 555-0199', company:'DataSync Ltd',     address:'77 Tech Blvd, SF', balance: 1500, status:'Active' },
-  { id:'7', type:'Customer', name:'Lisa Chen',         email:'lchen@brightmedia.co',   phone:'+1 555-0177', company:'Bright Media',     address:'900 Sunset Blvd, LA', balance: 0, status:'Inactive' },
-]
+import { useContacts } from '../contexts/ContactsContext'
+import type { Contact, ContactType } from '../contexts/ContactsContext'
 
 const TYPE_STYLE: Record<ContactType, { bg: string; color: string }> = {
-  Customer: { bg: 'rgba(34,214,135,0.1)',  color: 'var(--green)' },
-  Vendor:   { bg: 'rgba(240,79,79,0.1)',   color: 'var(--red)' },
-  Both:     { bg: 'rgba(91,143,255,0.1)',  color: 'var(--blue)' },
+  Customer: { bg: 'rgba(34,214,135,0.1)', color: 'var(--green)' },
+  Vendor: { bg: 'rgba(240,79,79,0.1)', color: 'var(--red)' },
+  Both: { bg: 'rgba(91,143,255,0.1)', color: 'var(--blue)' },
 }
 
 const EMPTY = { type: 'Customer' as ContactType, name: '', email: '', phone: '', company: '', address: '', balance: '', status: 'Active' as 'Active' | 'Inactive' }
@@ -39,7 +17,7 @@ function fmt(n: number) {
 }
 
 export default function VendorsCustomers() {
-  const [contacts, setContacts] = useState<Contact[]>(SEED)
+  const { contacts, addContact, updateContact, deleteContact } = useContacts()
   const [tab, setTab] = useState<'All' | ContactType>('All')
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(EMPTY)
@@ -58,8 +36,16 @@ export default function VendorsCustomers() {
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault()
-    const c: Contact = { id: Date.now().toString(), type: form.type, name: form.name, email: form.email, phone: form.phone, company: form.company, address: form.address, balance: parseFloat(String(form.balance)) || 0, status: form.status }
-    setContacts(a => [...a, c])
+    addContact({
+      type: form.type,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      company: form.company,
+      address: form.address,
+      balance: parseFloat(String(form.balance)) || 0,
+      status: form.status
+    })
     toast.success('Contact added')
     setShowModal(false)
     setForm(EMPTY)
@@ -67,12 +53,12 @@ export default function VendorsCustomers() {
 
   function handleDelete(id: string) {
     if (!confirm('Delete this contact?')) return
-    setContacts(a => a.filter(x => x.id !== id))
+    deleteContact(id)
     toast.success('Contact deleted')
   }
 
   function handleEditSave(id: string) {
-    setContacts(a => a.map(x => x.id === id ? { ...x, ...editForm } : x))
+    updateContact(id, editForm)
     toast.success('Contact updated')
     setEditId(null)
   }
@@ -93,9 +79,9 @@ export default function VendorsCustomers() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 24 }}>
           {[
             { label: 'TOTAL CUSTOMERS', value: customers, color: 'var(--green)', mono: false },
-            { label: 'TOTAL VENDORS',   value: vendors,   color: 'var(--red)',   mono: false },
+            { label: 'TOTAL VENDORS', value: vendors, color: 'var(--red)', mono: false },
             { label: 'ACCOUNTS RECEIVABLE', value: fmt(totalAR), color: 'var(--green)', mono: true },
-            { label: 'ACCOUNTS PAYABLE',    value: fmt(totalAP), color: 'var(--red)',   mono: true },
+            { label: 'ACCOUNTS PAYABLE', value: fmt(totalAP), color: 'var(--red)', mono: true },
           ].map(k => (
             <div key={k.label} style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 14, padding: 18 }}>
               <div style={{ fontSize: 10, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '.5px', marginBottom: 8 }}>{k.label}</div>

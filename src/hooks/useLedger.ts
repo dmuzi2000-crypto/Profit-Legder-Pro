@@ -12,6 +12,8 @@ export interface LedgerEntry {
   account_id: string | null
   account_name: string | null
   account_subcategory: string | null
+  contact_id?: string
+  contact_name?: string
   payment_status: 'paid' | 'unpaid' | 'partial'
   due_date: string | null
   paid_at: string | null
@@ -22,14 +24,14 @@ export interface LedgerEntry {
 
 // Maps old free-text type values → canonical subcategory names for legacy entries
 const TYPE_ALIAS: Record<string, string> = {
-  'Revenue':               'Operating Revenue',
-  'Other Income':          'Other Income',
-  'Cost of Sales':         'Cost of Sales',
-  'Operational Expenses':  'Operating Expense',
-  'Operational Expense':   'Operating Expense',
-  'Operating Expense':     'Operating Expense',
-  'Interest Expense':      'Interest Expense',
-  'Tax Expense':           'Tax Expense',
+  'Revenue': 'Operating Revenue',
+  'Other Income': 'Other Income',
+  'Cost of Sales': 'Cost of Sales',
+  'Operational Expenses': 'Operating Expense',
+  'Operational Expense': 'Operating Expense',
+  'Operating Expense': 'Operating Expense',
+  'Interest Expense': 'Interest Expense',
+  'Tax Expense': 'Tax Expense',
 }
 
 function subcat(e: LedgerEntry): string {
@@ -67,6 +69,8 @@ export function useLedger() {
     account_id: string | null = null,
     account_name: string | null = null,
     account_subcategory: string | null = null,
+    contact_id: string | null = null,
+    contact_name: string | null = null,
   ) {
     if (!tenant || !user) return { error: 'Not authenticated' }
     const maxSr = entries.length > 0 ? Math.max(...entries.map((e: LedgerEntry) => e.sr_no)) : 0
@@ -80,6 +84,8 @@ export function useLedger() {
       account_id,
       account_name,
       account_subcategory,
+      contact_id,
+      contact_name,
       payment_status,
       due_date,
       paid_amount: payment_status === 'paid' ? amount : 0,
@@ -108,16 +114,16 @@ export function useLedger() {
   }
 
   const totals = {
-    revenue:     entries.filter(e => subcat(e) === 'Operating Revenue').reduce((s, e) => s + Math.abs(e.amount), 0),
+    revenue: entries.filter(e => subcat(e) === 'Operating Revenue').reduce((s, e) => s + Math.abs(e.amount), 0),
     otherIncome: entries.filter(e => subcat(e) === 'Other Income').reduce((s, e) => s + Math.abs(e.amount), 0),
-    cogs:        entries.filter(e => subcat(e) === 'Cost of Sales').reduce((s, e) => s + Math.abs(e.amount), 0),
-    opex:        entries.filter(e => subcat(e) === 'Operating Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
-    interest:    entries.filter(e => subcat(e) === 'Interest Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
-    tax:         entries.filter(e => subcat(e) === 'Tax Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    cogs: entries.filter(e => subcat(e) === 'Cost of Sales').reduce((s, e) => s + Math.abs(e.amount), 0),
+    opex: entries.filter(e => subcat(e) === 'Operating Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    interest: entries.filter(e => subcat(e) === 'Interest Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    tax: entries.filter(e => subcat(e) === 'Tax Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
 
     get grossProfit() { return this.revenue - this.cogs },
-    get ebitda()      { return this.grossProfit + this.otherIncome - this.opex },
-    get netProfit()   { return this.ebitda - this.interest - this.tax },
+    get ebitda() { return this.grossProfit + this.otherIncome - this.opex },
+    get netProfit() { return this.ebitda - this.interest - this.tax },
 
     // Outstanding Receivables (unpaid Revenue types)
     get outstandingAR() {
@@ -128,7 +134,7 @@ export function useLedger() {
     // Outstanding Payables (unpaid Expense types)
     get outstandingAP() {
       return entries
-        .filter(e => ['Cost of Sales','Operating Expense','Interest Expense','Tax Expense'].includes(subcat(e)) && e.payment_status !== 'paid')
+        .filter(e => ['Cost of Sales', 'Operating Expense', 'Interest Expense', 'Tax Expense'].includes(subcat(e)) && e.payment_status !== 'paid')
         .reduce((s, e) => s + Math.abs(e.amount - e.paid_amount), 0)
     },
   }
