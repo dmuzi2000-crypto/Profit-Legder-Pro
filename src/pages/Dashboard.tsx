@@ -6,6 +6,7 @@ import { useLedger } from '../hooks/useLedger'
 import { useAuth } from '../hooks/useAuth'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import AddTransactionModal from '../components/modals/AddTransactionModal'
+import RecordPayments from './RecordPayments'
 
 function fmt(n: number) {
   return (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString()
@@ -25,6 +26,7 @@ export default function Dashboard() {
   const { tenant } = useAuth()
   const { entries, totals, isLoading } = useLedger()
   const [showTransactionModal, setShowTransactionModal] = useState(false)
+  const [showPayments, setShowPayments] = useState(false)
 
   const recentEntries = [...entries].reverse().slice(0, 6)
 
@@ -47,7 +49,7 @@ export default function Dashboard() {
           <button onClick={() => setShowTransactionModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green)', border: 'none', borderRadius: 8, color: '#0a0c10', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
             <Plus size={14} /> Record Transaction
           </button>
-          <button onClick={() => navigate('/app/transactions?action=record-payment')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'transparent', border: '1px solid var(--blue)', borderRadius: 8, color: 'var(--blue)', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
+          <button onClick={() => setShowPayments(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'transparent', border: '1px solid var(--blue)', borderRadius: 8, color: 'var(--blue)', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
             <Plus size={14} /> Record Payment
           </button>
         </div>
@@ -120,6 +122,7 @@ export default function Dashboard() {
         </div>
       </div>
       <AddTransactionModal isOpen={showTransactionModal} onClose={() => setShowTransactionModal(false)} />
+      <RecordPayments isOpen={showPayments} onClose={() => setShowPayments(false)} />
     </div>
   )
 }
