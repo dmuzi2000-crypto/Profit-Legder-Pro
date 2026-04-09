@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
 import { useLedger } from '../hooks/useLedger'
@@ -35,10 +36,25 @@ function StatusDot({ entry }: { entry: LedgerEntry }) {
 }
 
 export default function Transactions() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const { entries, isLoading, updateEntry, deleteEntry } = useLedger()
   const [showModal, setShowModal] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<LedgerEntry>>({})
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'record-payment') {
+      setShowModal(true)
+    }
+  }, [searchParams])
+
+  const handleCloseModal = () => {
+    setShowModal(false)
+    if (searchParams.has('action')) {
+      searchParams.delete('action')
+      setSearchParams(searchParams)
+    }
+  }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this transaction?')) return
@@ -133,7 +149,7 @@ export default function Transactions() {
         </div>
       </div>
 
-      <AddTransactionModal isOpen={showModal} onClose={() => setShowModal(false)} />
+      <AddTransactionModal isOpen={showModal} onClose={handleCloseModal} />
     </div>
   )
 }

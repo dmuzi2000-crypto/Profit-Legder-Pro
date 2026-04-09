@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { useLedger } from '../hooks/useLedger'
@@ -20,6 +21,7 @@ const MONTHLY_DEMO = [
 ]
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const { tenant } = useAuth()
   const { entries, totals, isLoading } = useLedger()
   const [showTransactionModal, setShowTransactionModal] = useState(false)
@@ -45,7 +47,7 @@ export default function Dashboard() {
           <button onClick={() => setShowTransactionModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green)', border: 'none', borderRadius: 8, color: '#0a0c10', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
             <Plus size={14} /> Record Transaction
           </button>
-          <button onClick={() => toast.info('Payment recording coming soon')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'transparent', border: '1px solid var(--blue)', borderRadius: 8, color: 'var(--blue)', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/app/transactions?action=record-payment')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'transparent', border: '1px solid var(--blue)', borderRadius: 8, color: 'var(--blue)', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
             <Plus size={14} /> Record Payment
           </button>
         </div>
