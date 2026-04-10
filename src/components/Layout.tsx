@@ -5,12 +5,14 @@ import { useLedger } from '../hooks/useLedger'
 import { AccountsProvider } from '../contexts/AccountsContext'
 import RecordPayments from '../pages/RecordPayments'
 import { ContactsProvider } from '../contexts/ContactsContext'
-import { LayoutDashboard, BookOpen, TrendingUp, List, Users, Settings, LogOut, CreditCard } from 'lucide-react'
+import { LayoutDashboard, BookOpen, TrendingUp, TrendingDown, List, Users, Settings, LogOut, CreditCard } from 'lucide-react'
 
 const NAV = [
   { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/app/transactions', icon: BookOpen, label: 'Transactions' },
   { to: '/app/income-statement', icon: TrendingUp, label: 'Income Statement' },
+  { to: '/app/accounts-receivable', icon: TrendingDown, label: 'Accounts Receivable' },
+  { to: '/app/accounts-payable', icon: TrendingUp, label: 'Accounts Payable' },
   { to: '/app/chart-of-accounts', icon: List, label: 'Chart of Accounts' },
   { to: '/app/vendors-customers', icon: Users, label: 'Vendors & Customers' },
 ]

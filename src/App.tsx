@@ -10,6 +10,8 @@ import Transactions from './pages/Transactions'
 import IncomeStatement from './pages/IncomeStatement'
 import ChartOfAccounts from './pages/ChartOfAccounts'
 import VendorsCustomers from './pages/VendorsCustomers'
+import AccountsReceivable from './pages/AccountsReceivable'
+import AccountsPayable from './pages/AccountsPayable'
 import Settings from './pages/Settings'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -42,6 +44,8 @@ export default function App() {
           <Route path="income-statement" element={<IncomeStatement />} />
           <Route path="chart-of-accounts" element={<ChartOfAccounts />} />
           <Route path="vendors-customers" element={<VendorsCustomers />} />
+          <Route path="accounts-receivable" element={<AccountsReceivable />} />
+          <Route path="accounts-payable" element={<AccountsPayable />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
