@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
 import { useLedger } from '../hooks/useLedger'
 import { LedgerEntry } from '../hooks/useLedger'
 import AddTransactionModal from '../components/modals/AddTransactionModal'
+import AiEntryModal from '../components/modals/AiEntryModal'
 import RecordPayments from './RecordPayments'
 
 function fmtAmt(n: number) {
@@ -12,6 +13,7 @@ function fmtAmt(n: number) {
 }
 
 const EXPENSE_SUBCATS = ['Cost of Sales', 'Operating Expense', 'Interest Expense', 'Tax Expense']
+const VALID_TYPES = ['Revenue', 'Cost of Sales', 'Operational Expenses', 'Other Income', 'Interest Expense', 'Tax Expense'] as const
 
 function AccountBadge({ entry }: { entry: LedgerEntry }) {
   const isExpense = entry.account_subcategory ? EXPENSE_SUBCATS.includes(entry.account_subcategory) : !['Revenue', 'Other Income'].includes(entry.type)
@@ -36,13 +38,21 @@ function StatusDot({ entry }: { entry: LedgerEntry }) {
   return <div title={`Unpaid (Due: ${entry.due_date ?? 'N/A'})`} style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--amber)', boxShadow: '0 0 8px rgba(245,166,35,0.4)' }} />
 }
 
+interface AiPreview {
+  details: string
+  type: string
+  amount: number
+}
+
 export default function Transactions() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const { entries, isLoading, updateEntry, deleteEntry } = useLedger()
+  const { entries, isLoading, updateEntry, deleteEntry, addEntry } = useLedger()
   const [showModal, setShowModal] = useState(false)
   const [showPayments, setShowPayments] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<LedgerEntry>>({})
+
+  const [showAiModal, setShowAiModal] = useState(false)
 
   useEffect(() => {
     if (searchParams.get('action') === 'record-payment') {
@@ -64,14 +74,33 @@ export default function Transactions() {
     else { toast.success('Transaction updated'); setEditId(null) }
   }
 
+  const isExpenseType = (type: string) => !['Revenue', 'Other Income'].includes(type)
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 56, background: 'var(--bg2)', borderBottom: '1px solid var(--border1)', display: 'flex', alignItems: 'center', padding: '0 28px', gap: 12 }}>
         <h1 style={{ fontSize: 16, fontWeight: 600, margin: 0, flex: 1 }}>Transactions</h1>
+        
+        <button 
+          id="ai-entry-btn"
+          onClick={() => setShowAiModal(true)} 
+          style={{ 
+            display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', 
+            background: 'rgba(167,139,250,0.15)', 
+            border: '1px solid var(--purple)', 
+            borderRadius: 8, color: 'var(--purple)', 
+            fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' 
+          }}
+        >
+          <span style={{ fontSize: 14 }}>✦</span> AI Entry
+        </button>
+
         <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green)', border: 'none', borderRadius: 8, color: '#0a0c10', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
           <Plus size={14} /> Add Transaction
         </button>
       </div>
+
+
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 28 }}>
         <div style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 16, overflow: 'hidden' }}>
@@ -145,6 +174,7 @@ export default function Transactions() {
       </div>
 
       <AddTransactionModal isOpen={showModal} onClose={() => setShowModal(false)} />
+      <AiEntryModal isOpen={showAiModal} onClose={() => setShowAiModal(false)} />
       <RecordPayments isOpen={showPayments} onClose={() => setShowPayments(false)} />
     </div>
   )
