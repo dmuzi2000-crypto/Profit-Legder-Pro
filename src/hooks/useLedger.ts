@@ -13,8 +13,8 @@ export interface LedgerEntry {
   account_id: string | null
   account_name: string | null
   account_subcategory: string | null
-  contact_id?: string
-  contact_name?: string
+  contact_id: string | null
+  contact_name: string | null
   payment_status: 'paid' | 'unpaid' | 'partial'
   due_date: string | null
   paid_at: string | null
@@ -66,13 +66,13 @@ export function useLedger() {
     type: string,
     amount: number,
     entry_date: string = new Date().toISOString().split('T')[0],
+    contact_name: string | null = null,
     payment_status: 'paid' | 'unpaid' = 'paid',
     due_date: string | null = null,
     account_id: string | null = null,
     account_name: string | null = null,
     account_subcategory: string | null = null,
     contact_id: string | null = null,
-    contact_name: string | null = null,
   ) {
     if (!tenant || !user) return { error: 'Not authenticated' }
     const maxSr = entries.length > 0 ? Math.max(...entries.map((e: LedgerEntry) => e.sr_no)) : 0

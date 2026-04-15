@@ -89,13 +89,13 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
             form.account_subcategory,
             amt,
             form.entry_date,
+            form.contact_name || null,
             form.isUnpaid ? 'unpaid' : 'paid',
             form.isUnpaid ? form.due_date : null,
             form.account_id,
             form.account_name,
             form.account_subcategory,
             form.contact_id || null,
-            form.contact_name || null
         )
 
         if (error) toast.error(error)
@@ -131,7 +131,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
                             </select>
                         </div>
                         <div>
-                            <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>CONTACT (OPTIONAL)</label>
+                            <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>EXISTING CONTACT</label>
                             <select value={form.contact_id} onChange={e => handleContactChange(e.target.value)} style={{ width: '100%' }}>
                                 <option value="">No Contact</option>
                                 {contacts.map(c => (
@@ -139,6 +139,11 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
                                 ))}
                             </select>
                         </div>
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>CONTACT NAME (OPTIONAL)</label>
+                        <input value={form.contact_name} onChange={e => setForm(f => ({ ...f, contact_name: e.target.value }))} placeholder="e.g. AWS, John Smith" />
                     </div>
 
                     {form.account_subcategory && (

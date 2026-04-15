@@ -13,6 +13,7 @@ interface AiPreview {
   type: string
   amount: number
   entry_date?: string
+  contact_name?: string | null
 }
 
 const VALID_TYPES = ['Revenue', 'Cost of Sales', 'Operational Expenses', 'Other Income', 'Interest Expense', 'Tax Expense'] as const
@@ -47,7 +48,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
           messages: [
             { 
               role: "system", 
-              content: "Extract a ledger entry from user text. Return ONLY valid JSON: {\"details\":\"...\",\"type\":\"...\",\"amount\":number, \"entry_date\": \"YYYY-MM-DD\"}. Type must be one of: Revenue, Cost of Sales, Operational Expenses, Other Income, Interest Expense, Tax Expense. Expenses are negative numbers, income positive. entry_date is optional, provide it ONLY if mentioned in text. No explanation, no markdown, just JSON." 
+              content: "Extract a ledger entry from user text. Return ONLY valid JSON: {\"details\":\"...\",\"type\":\"...\",\"amount\":number, \"entry_date\": \"YYYY-MM-DD\", \"contact_name\": \"...\"}. Type must be one of: Revenue, Cost of Sales, Operational Expenses, Other Income, Interest Expense, Tax Expense. Expenses are negative numbers, income positive. entry_date and contact_name are optional, provide them ONLY if mentioned or implied (e.g. 'paid AWS' implies contact_name: 'AWS'). No explanation, no markdown, just JSON." 
             },
             { role: "user", content: userInput }
           ]
@@ -86,7 +87,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
     setIsConfirming(true)
 
     const entryDate = preview.entry_date || new Date().toISOString().split('T')[0]
-    const { error } = await addEntry(preview.details, preview.type, preview.amount, entryDate)
+    const { error } = await addEntry(preview.details, preview.type, preview.amount, entryDate, preview.contact_name || null)
 
     if (error) {
       toast.error(error)
@@ -241,6 +242,18 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
                       type="date"
                       value={preview.entry_date || new Date().toISOString().split('T')[0]} 
                       onChange={e => setPreview({ ...preview, entry_date: e.target.value })}
+                      style={{ 
+                        width: '100%', background: 'var(--bg2)', border: '1px solid var(--border2)', 
+                        borderRadius: 10, padding: '10px 12px', color: 'var(--text1)', 
+                        fontSize: 14 
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.05em' }}>CONTACT</label>
+                    <input 
+                      value={preview.contact_name || ''} 
+                      onChange={e => setPreview({ ...preview, contact_name: e.target.value })}
                       style={{ 
                         width: '100%', background: 'var(--bg2)', border: '1px solid var(--border2)', 
                         borderRadius: 10, padding: '10px 12px', color: 'var(--text1)', 

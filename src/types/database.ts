@@ -51,6 +51,8 @@ export interface Database {
           type: string
           amount: number
           entry_date: string
+          contact_id: string | null
+          contact_name: string | null
           created_at: string
           created_by: string
         }
@@ -62,6 +64,8 @@ export interface Database {
           type: string
           amount: number
           entry_date?: string
+          contact_id?: string | null
+          contact_name?: string | null
           created_at?: string
           created_by: string
         }
@@ -70,6 +74,8 @@ export interface Database {
           type?: string
           amount?: number
           entry_date?: string
+          contact_id?: string | null
+          contact_name?: string | null
         }
       }
       subscriptions: {

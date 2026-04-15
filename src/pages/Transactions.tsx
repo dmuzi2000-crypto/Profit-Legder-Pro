@@ -107,7 +107,7 @@ export default function Transactions() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
-                {['', 'SR', 'Date', 'Details', 'Account', 'Contact', 'Amount', 'Actions'].map((h, i) => (
+                {['', 'SR', 'Date', 'Details', 'Contact', 'Account', 'Amount', 'Actions'].map((h, i) => (
                   <th key={h} style={{ textAlign: i >= 6 ? 'right' : 'left', padding: '11px 16px', fontSize: 10, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '0.5px', borderBottom: '1px solid var(--border1)', fontWeight: 500, background: 'var(--bg3)' }}>{h}</th>
                 ))}
               </tr>
@@ -131,11 +131,11 @@ export default function Transactions() {
                       ? <input value={editForm.details ?? ''} onChange={e => setEditForm(f => ({ ...f, details: e.target.value }))} style={{ padding: '5px 8px', fontSize: 12 }} />
                       : entry.details}
                   </td>
-                  <td style={{ padding: '11px 16px', borderBottom: '1px solid var(--border1)' }}>
-                    <AccountBadge entry={entry} />
-                  </td>
                   <td style={{ padding: '11px 16px', borderBottom: '1px solid var(--border1)', color: 'var(--text2)' }}>
                     {entry.contact_name ?? '—'}
+                  </td>
+                  <td style={{ padding: '11px 16px', borderBottom: '1px solid var(--border1)' }}>
+                    <AccountBadge entry={entry} />
                   </td>
                   <td style={{ padding: '11px 16px', textAlign: 'right', fontFamily: 'DM Mono, monospace', borderBottom: '1px solid var(--border1)', color: EXPENSE_SUBCATS.includes(entry.account_subcategory ?? '') ? 'var(--red)' : 'var(--green)' }}>
                     {editId === entry.id
