@@ -6,6 +6,7 @@ import { useLedger } from '../hooks/useLedger'
 import { useAuth } from '../hooks/useAuth'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import AddTransactionModal from '../components/modals/AddTransactionModal'
+import AiEntryModal from '../components/modals/AiEntryModal'
 import RecordPayments from './RecordPayments'
 
 function fmt(n: number) {
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const { tenant } = useAuth()
   const { entries, totals, isLoading } = useLedger()
   const [showTransactionModal, setShowTransactionModal] = useState(false)
+  const [showAiModal, setShowAiModal] = useState(false)
   const [showPayments, setShowPayments] = useState(false)
 
   const recentEntries = [...entries].reverse().slice(0, 6)
@@ -46,6 +48,18 @@ export default function Dashboard() {
         <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'DM Mono, monospace', flex: 1 }}>{tenant?.name}</span>
 
         <div style={{ display: 'flex', gap: 8 }}>
+          <button 
+            onClick={() => setShowAiModal(true)} 
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', 
+              background: 'rgba(167,139,250,0.15)', 
+              border: '1px solid var(--purple)', 
+              borderRadius: 8, color: 'var(--purple)', 
+              fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' 
+            }}
+          >
+            <span style={{ fontSize: 14 }}>✦</span> AI Entry
+          </button>
           <button onClick={() => setShowTransactionModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green)', border: 'none', borderRadius: 8, color: '#0a0c10', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
             <Plus size={14} /> Record Transaction
           </button>
@@ -122,6 +136,7 @@ export default function Dashboard() {
         </div>
       </div>
       <AddTransactionModal isOpen={showTransactionModal} onClose={() => setShowTransactionModal(false)} />
+      <AiEntryModal isOpen={showAiModal} onClose={() => setShowAiModal(false)} />
       <RecordPayments isOpen={showPayments} onClose={() => setShowPayments(false)} />
     </div>
   )
