@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Check, Building2, User } from 'lucide-react'
-import { useContacts } from '../contexts/ContactsContext'
-import type { Contact, ContactType } from '../contexts/ContactsContext'
+import { useContacts } from '../hooks/useContacts'
+import type { Contact } from '../types/database'
+
+type ContactType = Contact['type']
 
 const TYPE_STYLE: Record<ContactType, { bg: string; color: string }> = {
   Customer: { bg: 'rgba(34,214,135,0.1)', color: 'var(--green)' },
@@ -17,7 +19,7 @@ function fmt(n: number) {
 }
 
 export default function VendorsCustomers() {
-  const { contacts, addContact, updateContact, deleteContact } = useContacts()
+  const { contacts, isLoading, addContact, updateContact, deleteContact } = useContacts()
   const [tab, setTab] = useState<'All' | ContactType>('All')
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(EMPTY)
@@ -34,9 +36,9 @@ export default function VendorsCustomers() {
   const customers = contacts.filter(c => c.type === 'Customer' || c.type === 'Both').length
   const vendors = contacts.filter(c => c.type === 'Vendor' || c.type === 'Both').length
 
-  function handleAdd(e: React.FormEvent) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
-    addContact({
+    const { error } = await addContact({
       type: form.type,
       name: form.name,
       email: form.email,
@@ -46,21 +48,28 @@ export default function VendorsCustomers() {
       balance: parseFloat(String(form.balance)) || 0,
       status: form.status
     })
-    toast.success('Contact added')
-    setShowModal(false)
-    setForm(EMPTY)
+    if (error) toast.error(error)
+    else {
+      toast.success('Contact added')
+      setShowModal(false)
+      setForm(EMPTY)
+    }
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm('Delete this contact?')) return
-    deleteContact(id)
-    toast.success('Contact deleted')
+    const { error } = await deleteContact(id)
+    if (error) toast.error(error)
+    else toast.success('Contact deleted')
   }
 
-  function handleEditSave(id: string) {
-    updateContact(id, editForm)
-    toast.success('Contact updated')
-    setEditId(null)
+  async function handleEditSave(id: string) {
+    const { error } = await updateContact(id, editForm)
+    if (error) toast.error(error)
+    else {
+      toast.success('Contact updated')
+      setEditId(null)
+    }
   }
 
   const tdStyle = { padding: '11px 14px', borderBottom: '1px solid var(--border1)', fontSize: 13, verticalAlign: 'middle' as const }
@@ -111,7 +120,9 @@ export default function VendorsCustomers() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {isLoading ? (
+                <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text3)', padding: 40 }}>Loading contacts...</td></tr>
+              ) : filtered.length === 0 ? (
                 <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text3)', padding: 40 }}>No contacts found.</td></tr>
               ) : filtered.map(c => (
                 <tr key={c.id}

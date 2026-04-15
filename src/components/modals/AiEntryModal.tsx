@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { toast } from 'sonner'
 import { Sparkles, X, Check, Loader2, ArrowRight } from 'lucide-react'
 import { useLedger } from '../../hooks/useLedger'
+import { useContacts } from '../../hooks/useContacts'
 
 interface AiEntryModalProps {
   isOpen: boolean
@@ -13,6 +14,7 @@ interface AiPreview {
   type: string
   amount: number
   entry_date?: string
+  contact_id?: string | null
   contact_name?: string | null
 }
 
@@ -20,6 +22,7 @@ const VALID_TYPES = ['Revenue', 'Cost of Sales', 'Operational Expenses', 'Other 
 
 export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
   const { addEntry } = useLedger()
+  const { contacts } = useContacts()
   const [userInput, setUserInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [preview, setPreview] = useState<AiPreview | null>(null)
@@ -71,6 +74,14 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
           throw new Error('Invalid format')
         }
         
+        if (parsed.contact_name) {
+          const matched = contacts.find(c => c.name.toLowerCase() === parsed.contact_name?.toLowerCase())
+          if (matched) {
+            parsed.contact_id = matched.id
+            parsed.contact_name = matched.name
+          }
+        }
+        
         setPreview(parsed)
       } catch (e) {
         toast.error("Couldn't parse, try rephrasing")
@@ -87,7 +98,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
     setIsConfirming(true)
 
     const entryDate = preview.entry_date || new Date().toISOString().split('T')[0]
-    const { error } = await addEntry(preview.details, preview.type, preview.amount, entryDate, preview.contact_name || null)
+    const { error } = await addEntry(preview.details, preview.type, preview.amount, entryDate, preview.contact_name || null, 'paid', null, null, null, null, preview.contact_id || null)
 
     if (error) {
       toast.error(error)
@@ -251,15 +262,22 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.05em' }}>CONTACT</label>
-                    <input 
-                      value={preview.contact_name || ''} 
-                      onChange={e => setPreview({ ...preview, contact_name: e.target.value })}
+                    <select 
+                      value={preview.contact_id || ''} 
+                      onChange={e => {
+                        const id = e.target.value
+                        const contact = contacts.find(c => c.id === id)
+                        setPreview({ ...preview, contact_id: id || null, contact_name: contact?.name || null })
+                      }}
                       style={{ 
                         width: '100%', background: 'var(--bg2)', border: '1px solid var(--border2)', 
                         borderRadius: 10, padding: '10px 12px', color: 'var(--text1)', 
                         fontSize: 14 
                       }}
-                    />
+                    >
+                      <option value="">None</option>
+                      {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
                   </div>
                 </div>
               </div>

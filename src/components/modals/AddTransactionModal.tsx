@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { useLedger } from '../../hooks/useLedger'
 import { useAccounts } from '../../contexts/AccountsContext'
-import { useContacts } from '../../contexts/ContactsContext'
+import { useContacts } from '../../hooks/useContacts'
 
 interface AddTransactionModalProps {
     isOpen: boolean
@@ -122,28 +122,33 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>ACCOUNT</label>
-                            <select value={form.account_id} onChange={e => handleAccountChange(e.target.value)} style={{ width: '100%' }}>
-                                {plAccounts.map(a => (
-                                    <option key={a.id} value={a.id}>{a.code} — {a.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>EXISTING CONTACT</label>
-                            <select value={form.contact_id} onChange={e => handleContactChange(e.target.value)} style={{ width: '100%' }}>
-                                <option value="">No Contact</option>
-                                {contacts.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name} — {c.company}</option>
-                                ))}
-                            </select>
-                        </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>ACCOUNT</label>
+                        <select value={form.account_id} onChange={e => handleAccountChange(e.target.value)} style={{ width: '100%' }}>
+                            {plAccounts.map(a => (
+                                <option key={a.id} value={a.id}>{a.code} — {a.name}</option>
+                            ))}
+                        </select>
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>CONTACT NAME (OPTIONAL)</label>
-                        <input value={form.contact_name} onChange={e => setForm(f => ({ ...f, contact_name: e.target.value }))} placeholder="e.g. AWS, John Smith" />
+                        <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>CONTACT (OPTIONAL)</label>
+                        <input 
+                            list="contact-list"
+                            value={form.contact_name} 
+                            onChange={e => {
+                                const name = e.target.value
+                                const contact = contacts.find(c => c.name === name)
+                                setForm(f => ({ ...f, contact_name: name, contact_id: contact?.id ?? '' }))
+                            }} 
+                            placeholder="Search or type contact name..." 
+                        />
+                        <datalist id="contact-list">
+                            <option value="">None</option>
+                            {contacts.map(c => (
+                                <option key={c.id} value={c.name}>{c.company ? `${c.name} (${c.company})` : c.name}</option>
+                            ))}
+                        </datalist>
                     </div>
 
                     {form.account_subcategory && (

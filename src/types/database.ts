@@ -106,6 +106,44 @@ export interface Database {
           current_period_end?: string | null
         }
       }
+      contacts: {
+        Row: {
+          id: string
+          tenant_id: string
+          type: 'Customer' | 'Vendor' | 'Both'
+          name: string
+          email: string
+          phone: string
+          company: string
+          address: string
+          balance: number
+          status: 'Active' | 'Inactive'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          type?: 'Customer' | 'Vendor' | 'Both'
+          name: string
+          email?: string
+          phone?: string
+          company?: string
+          address?: string
+          balance?: number
+          status?: 'Active' | 'Inactive'
+          created_at?: string
+        }
+        Update: {
+          type?: 'Customer' | 'Vendor' | 'Both'
+          name?: string
+          email?: string
+          phone?: string
+          company?: string
+          address?: string
+          balance?: number
+          status?: 'Active' | 'Inactive'
+        }
+      }
     }
   }
 }
@@ -115,6 +153,7 @@ export type Tenant = Database['public']['Tables']['tenants']['Row']
 export type TenantMember = Database['public']['Tables']['tenant_members']['Row']
 export type LedgerEntry = Database['public']['Tables']['ledger_entries']['Row']
 export type Subscription = Database['public']['Tables']['subscriptions']['Row']
+export type Contact = Database['public']['Tables']['contacts']['Row']
 
 export const ENTRY_TYPES = [
   'Revenue',
