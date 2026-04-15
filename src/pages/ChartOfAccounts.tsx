@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
-import { useAccounts, CATEGORIES, SUBCATEGORIES, CAT_COLORS } from '../contexts/AccountsContext'
-import type { Account, Category } from '../contexts/AccountsContext'
+import { useAccounts } from '../hooks/useAccounts'
+import { CATEGORIES, SUBCATEGORIES, CAT_COLORS } from '../contexts/AccountsContext'
+import type { Account } from '../types/database'
+import type { Category } from '../contexts/AccountsContext'
 
 
 function fmt(n: number) {
@@ -12,7 +14,7 @@ function fmt(n: number) {
 const EMPTY = { code: '', name: '', category: 'Asset' as Category, subcategory: 'Current Asset', balance: '' }
 
 export default function ChartOfAccounts() {
-  const { accounts, addAccount, updateAccount, deleteAccount } = useAccounts()
+  const { accounts, isLoading, addAccount, updateAccount, deleteAccount } = useAccounts()
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [editId, setEditId] = useState<string | null>(null)
@@ -31,31 +33,38 @@ export default function ChartOfAccounts() {
     return acc
   }, {} as Record<Category, number>)
 
-  function handleAdd(e: React.FormEvent) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!form.code || !form.name) return
-    addAccount({
+    const { error } = await addAccount({
       code: form.code,
       name: form.name,
       category: form.category,
       subcategory: form.subcategory,
       balance: parseFloat(String(form.balance)) || 0,
     })
-    toast.success('Account added')
-    setShowModal(false)
-    setForm(EMPTY)
+    if (error) toast.error(error)
+    else {
+      toast.success('Account added')
+      setShowModal(false)
+      setForm(EMPTY)
+    }
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm('Delete this account?')) return
-    deleteAccount(id)
-    toast.success('Account deleted')
+    const { error } = await deleteAccount(id)
+    if (error) toast.error(error)
+    else toast.success('Account deleted')
   }
 
-  function handleEditSave(id: string) {
-    updateAccount(id, editForm)
-    toast.success('Account updated')
-    setEditId(null)
+  async function handleEditSave(id: string) {
+    const { error } = await updateAccount(id, editForm)
+    if (error) toast.error(error)
+    else {
+      toast.success('Account updated')
+      setEditId(null)
+    }
   }
 
   const tdStyle = { padding: '10px 14px', borderBottom: '1px solid var(--border1)', fontSize: 13 }
@@ -94,7 +103,9 @@ export default function ChartOfAccounts() {
               </tr>
             </thead>
             <tbody>
-              {CATEGORIES.map(cat => {
+              {isLoading ? (
+                <tr><td colSpan={6} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text3)', padding: 40 }}>Loading chart of accounts...</td></tr>
+              ) : CATEGORIES.map(cat => {
                 const rows = grouped[cat]
                 if (!rows.length) return null
                 return rows.map((acc, i) => (

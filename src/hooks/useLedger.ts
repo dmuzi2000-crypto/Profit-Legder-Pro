@@ -21,6 +21,7 @@ export interface LedgerEntry {
   paid_amount: number
   created_at: string
   created_by: string
+  accounts?: { category: string } | null
 }
 
 // Maps old free-text type values → canonical subcategory names for legacy entries
@@ -39,6 +40,10 @@ function subcat(e: LedgerEntry): string {
   return e.account_subcategory ?? TYPE_ALIAS[e.type] ?? e.type
 }
 
+function cat(e: LedgerEntry): string {
+  return e.accounts?.category ?? e.type
+}
+
 export function useLedger() {
   const { tenant, user } = useAuth()
   const [entries, setEntries] = useState<LedgerEntry[]>([])
@@ -50,7 +55,7 @@ export function useLedger() {
     setIsLoading(true)
     const { data, error } = await (supabase as any)
       .from('ledger_entries')
-      .select('*')
+      .select('*, accounts(category)')
       .eq('tenant_id', tenant.id)
       .order('sr_no', { ascending: true })
 
@@ -117,10 +122,10 @@ export function useLedger() {
   }
 
   const totals = {
-    revenue: entries.filter(e => subcat(e) === 'Operating Revenue').reduce((s, e) => s + Math.abs(e.amount), 0),
+    revenue: entries.filter(e => cat(e) === 'Revenue').reduce((s, e) => s + Math.abs(e.amount), 0),
     otherIncome: entries.filter(e => subcat(e) === 'Other Income').reduce((s, e) => s + Math.abs(e.amount), 0),
     cogs: entries.filter(e => subcat(e) === 'Cost of Sales').reduce((s, e) => s + Math.abs(e.amount), 0),
-    opex: entries.filter(e => subcat(e) === 'Operating Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    opex: entries.filter(e => cat(e) === 'Expense' && !['Cost of Sales', 'Interest Expense', 'Tax Expense'].includes(subcat(e))).reduce((s, e) => s + Math.abs(e.amount), 0),
     interest: entries.filter(e => subcat(e) === 'Interest Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
     tax: entries.filter(e => subcat(e) === 'Tax Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
 
@@ -131,17 +136,17 @@ export function useLedger() {
     // Outstanding Receivables (unpaid Revenue types)
     get outstandingAR() {
       return entries
-        .filter(e => (subcat(e) === 'Operating Revenue' || subcat(e) === 'Other Income') && e.payment_status !== 'paid')
+        .filter(e => cat(e) === 'Revenue' && e.payment_status !== 'paid')
         .reduce((s, e) => s + Math.abs(e.amount - e.paid_amount), 0)
     },
     // Outstanding Payables (unpaid Expense types)
     get outstandingAP() {
       return entries
-        .filter(e => ['Cost of Sales', 'Operating Expense', 'Interest Expense', 'Tax Expense'].includes(subcat(e)) && e.payment_status !== 'paid')
+        .filter(e => cat(e) === 'Expense' && e.payment_status !== 'paid')
         .reduce((s, e) => s + Math.abs(e.amount - e.paid_amount), 0)
     },
   }
 
-  return { entries, totals, isLoading, error, addEntry, updateEntry, updatePayment, deleteEntry, refetch: fetchEntries, subcat }
+  return { entries, totals, isLoading, error, addEntry, updateEntry, updatePayment, deleteEntry, refetch: fetchEntries, subcat, cat }
 }
 

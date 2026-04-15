@@ -51,8 +51,15 @@ export interface Database {
           type: string
           amount: number
           entry_date: string
+          account_subcategory: string | null
           contact_id: string | null
           contact_name: string | null
+          account_id: string | null
+          account_name: string | null
+          payment_status: 'paid' | 'unpaid' | 'partial'
+          due_date: string | null
+          paid_at: string | null
+          paid_amount: number
           created_at: string
           created_by: string
         }
@@ -64,8 +71,15 @@ export interface Database {
           type: string
           amount: number
           entry_date?: string
+          account_id?: string | null
+          account_name?: string | null
+          account_subcategory?: string | null
           contact_id?: string | null
           contact_name?: string | null
+          payment_status?: 'paid' | 'unpaid' | 'partial'
+          due_date?: string | null
+          paid_at?: string | null
+          paid_amount?: number
           created_at?: string
           created_by: string
         }
@@ -74,8 +88,44 @@ export interface Database {
           type?: string
           amount?: number
           entry_date?: string
+          account_id?: string | null
+          account_name?: string | null
+          account_subcategory?: string | null
           contact_id?: string | null
           contact_name?: string | null
+          payment_status?: 'paid' | 'unpaid' | 'partial'
+          due_date?: string | null
+          paid_at?: string | null
+          paid_amount?: number
+        }
+      }
+      accounts: {
+        Row: {
+          id: string
+          tenant_id: string
+          code: string
+          name: string
+          category: 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense'
+          subcategory: string
+          balance: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          code: string
+          name: string
+          category: 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense'
+          subcategory?: string
+          balance?: number
+          created_at?: string
+        }
+        Update: {
+          code?: string
+          name?: string
+          category?: 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense'
+          subcategory?: string
+          balance?: number
         }
       }
       subscriptions: {
@@ -154,6 +204,7 @@ export type TenantMember = Database['public']['Tables']['tenant_members']['Row']
 export type LedgerEntry = Database['public']['Tables']['ledger_entries']['Row']
 export type Subscription = Database['public']['Tables']['subscriptions']['Row']
 export type Contact = Database['public']['Tables']['contacts']['Row']
+export type Account = Database['public']['Tables']['accounts']['Row']
 
 export const ENTRY_TYPES = [
   'Revenue',

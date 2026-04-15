@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { useLedger } from '../../hooks/useLedger'
-import { useAccounts } from '../../contexts/AccountsContext'
+import { useAccounts } from '../../hooks/useAccounts'
+import { CATEGORIES } from '../../contexts/AccountsContext'
 import { useContacts } from '../../hooks/useContacts'
 
 interface AddTransactionModalProps {
@@ -65,7 +66,12 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
     function handleAccountChange(id: string) {
         const acc = accounts.find(a => a.id === id)
         if (!acc) return
-        setForm(f => ({ ...f, account_id: acc.id, account_name: acc.name, account_subcategory: acc.subcategory }))
+        setForm(f => ({ 
+            ...f, 
+            account_id: acc.id, 
+            account_name: acc.name, 
+            account_subcategory: acc.subcategory 
+        }))
     }
 
     function handleContactChange(id: string) {
@@ -122,14 +128,23 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div>
-                        <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>ACCOUNT</label>
-                        <select value={form.account_id} onChange={e => handleAccountChange(e.target.value)} style={{ width: '100%' }}>
-                            {plAccounts.map(a => (
-                                <option key={a.id} value={a.id}>{a.code} — {a.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>ACCOUNT</label>
+                            <select value={form.account_id} onChange={e => handleAccountChange(e.target.value)} style={{ width: '100%' }}>
+                                <option value="">Select Account...</option>
+                                {CATEGORIES.map(cat => {
+                                    const catAccounts = accounts.filter(a => a.category === cat)
+                                    if (catAccounts.length === 0) return null
+                                    return (
+                                        <optgroup key={cat} label={cat.toUpperCase()}>
+                                            {catAccounts.map(a => (
+                                                <option key={a.id} value={a.id}>{a.code} — {a.name}</option>
+                                            ))}
+                                        </optgroup>
+                                    )
+                                })}
+                            </select>
+                        </div>
 
                     <div>
                         <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>CONTACT (OPTIONAL)</label>

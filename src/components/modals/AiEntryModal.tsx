@@ -3,6 +3,8 @@ import { toast } from 'sonner'
 import { Sparkles, X, Check, Loader2, ArrowRight } from 'lucide-react'
 import { useLedger } from '../../hooks/useLedger'
 import { useContacts } from '../../hooks/useContacts'
+import { useAccounts } from '../../hooks/useAccounts'
+import { CATEGORIES } from '../../contexts/AccountsContext'
 
 interface AiEntryModalProps {
   isOpen: boolean
@@ -14,6 +16,8 @@ interface AiPreview {
   type: string
   amount: number
   entry_date?: string
+  account_id?: string | null
+  account_name?: string | null
   contact_id?: string | null
   contact_name?: string | null
 }
@@ -23,6 +27,7 @@ const VALID_TYPES = ['Revenue', 'Cost of Sales', 'Operational Expenses', 'Other 
 export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
   const { addEntry } = useLedger()
   const { contacts } = useContacts()
+  const { accounts } = useAccounts()
   const [userInput, setUserInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [preview, setPreview] = useState<AiPreview | null>(null)
@@ -81,6 +86,16 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
             parsed.contact_name = matched.name
           }
         }
+
+        // Match account
+        const matchedAccount = accounts.find(a => 
+          a.name.toLowerCase() === parsed.details.toLowerCase() || 
+          a.subcategory.toLowerCase() === parsed.type.toLowerCase()
+        )
+        if (matchedAccount) {
+          parsed.account_id = matchedAccount.id
+          parsed.account_name = matchedAccount.name
+        }
         
         setPreview(parsed)
       } catch (e) {
@@ -98,7 +113,19 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
     setIsConfirming(true)
 
     const entryDate = preview.entry_date || new Date().toISOString().split('T')[0]
-    const { error } = await addEntry(preview.details, preview.type, preview.amount, entryDate, preview.contact_name || null, 'paid', null, null, null, null, preview.contact_id || null)
+    const { error } = await addEntry(
+      preview.details, 
+      preview.type, 
+      preview.amount, 
+      entryDate, 
+      preview.contact_name || null, 
+      'paid', 
+      null, 
+      preview.account_id || null, 
+      preview.account_name || null, 
+      null, 
+      preview.contact_id || null
+    )
 
     if (error) {
       toast.error(error)
@@ -222,16 +249,29 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.05em' }}>CATEGORY</label>
+                    <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.05em' }}>ACCOUNT</label>
                     <select 
-                      value={preview.type} 
-                      onChange={e => setPreview({ ...preview, type: e.target.value })}
+                      value={preview.account_id || ''} 
+                      onChange={e => {
+                        const id = e.target.value
+                        const acc = accounts.find(a => a.id === id)
+                        setPreview({ ...preview, account_id: id || null, account_name: acc?.name || null })
+                      }}
                       style={{ 
                         width: '100%', background: 'var(--bg2)', border: '1px solid var(--border2)', 
                         borderRadius: 10, padding: '10px 12px', color: 'var(--text1)', fontSize: 14 
                       }}
                     >
-                      {VALID_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                      <option value="">Select Account...</option>
+                      {CATEGORIES.map(cat => {
+                        const catAccounts = accounts.filter(a => a.category === cat)
+                        if (catAccounts.length === 0) return null
+                        return (
+                          <optgroup key={cat} label={cat.toUpperCase()}>
+                            {catAccounts.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+                          </optgroup>
+                        )
+                      })}
                     </select>
                   </div>
                   <div>
