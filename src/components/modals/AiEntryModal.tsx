@@ -13,7 +13,7 @@ interface AiEntryModalProps {
 
 interface AiPreview {
   details: string
-  type: string
+  type?: string
   amount: number
   entry_date?: string
   account_id?: string | null
@@ -45,6 +45,8 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
 
     setIsLoading(true)
     try {
+      const accountsList = accounts.map(a => `${a.id}: ${a.code} - ${a.name} (${a.category})`).join('\n')
+      
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -56,7 +58,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
           messages: [
             { 
               role: "system", 
-              content: "Extract a ledger entry from user text. Return ONLY valid JSON: {\"details\":\"...\",\"type\":\"...\",\"amount\":number, \"entry_date\": \"YYYY-MM-DD\", \"contact_name\": \"...\"}. Type must be one of: Revenue, Cost of Sales, Operational Expenses, Other Income, Interest Expense, Tax Expense. Expenses are negative numbers, income positive. entry_date and contact_name are optional, provide them ONLY if mentioned or implied (e.g. 'paid AWS' implies contact_name: 'AWS'). No explanation, no markdown, just JSON." 
+              content: "Extract a ledger entry from user text. Return ONLY valid JSON: {\"details\":\"...\",\"account_id\":\"...\",\"account_name\":\"...\",\"amount\":number, \"entry_date\": \"YYYY-MM-DD\", \"contact_name\": \"...\"}. \n\nMatch the transaction to the most relevant account from this list:\n" + accountsList + "\n\nSet account_id (the ID before the colon) and account_name exactly. Expenses are negative numbers, income positive. entry_date and contact_name are optional. No explanation, no markdown, just JSON." 
             },
             { role: "user", content: userInput }
           ]
@@ -75,7 +77,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
         const cleanedContent = content.trim().replace(/^```json/, '').replace(/```$/, '').trim()
         const parsed: AiPreview = JSON.parse(cleanedContent)
         
-        if (!parsed.details || !parsed.type || typeof parsed.amount !== 'number') {
+        if (!parsed.details || typeof parsed.amount !== 'number') {
           throw new Error('Invalid format')
         }
         
@@ -87,14 +89,12 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
           }
         }
 
-        // Match account
-        const matchedAccount = accounts.find(a => 
-          a.name.toLowerCase() === parsed.details.toLowerCase() || 
-          a.subcategory.toLowerCase() === parsed.type.toLowerCase()
-        )
-        if (matchedAccount) {
-          parsed.account_id = matchedAccount.id
-          parsed.account_name = matchedAccount.name
+        // If AI didn't return id but returned name, try to match it
+        if (!parsed.account_id && parsed.account_name) {
+          const matchedAccount = accounts.find(a => a.name.toLowerCase() === parsed.account_name?.toLowerCase())
+          if (matchedAccount) {
+            parsed.account_id = matchedAccount.id
+          }
         }
         
         setPreview(parsed)
@@ -113,9 +113,17 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
     setIsConfirming(true)
 
     const entryDate = preview.entry_date || new Date().toISOString().split('T')[0]
+    
+    // Derive type/subcategory from matched account if possible
+    let entryType = preview.type || ''
+    if (preview.account_id) {
+      const acc = accounts.find(a => a.id === preview.account_id)
+      if (acc) entryType = acc.subcategory
+    }
+
     const { error } = await addEntry(
       preview.details, 
-      preview.type, 
+      entryType, 
       preview.amount, 
       entryDate, 
       preview.contact_name || null, 
