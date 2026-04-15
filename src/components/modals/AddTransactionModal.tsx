@@ -16,6 +16,7 @@ interface AddForm {
     account_name: string
     account_subcategory: string
     amount: string
+    entry_date: string
     isUnpaid: boolean
     due_date: string
     contact_id: string
@@ -39,6 +40,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
         account_name: defaultAccount?.name ?? '',
         account_subcategory: defaultAccount?.subcategory ?? '',
         amount: '',
+        entry_date: new Date().toISOString().split('T')[0],
         isUnpaid: false,
         due_date: new Date().toISOString().split('T')[0],
         contact_id: '',
@@ -86,6 +88,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
             form.details,
             form.account_subcategory,
             amt,
+            form.entry_date,
             form.isUnpaid ? 'unpaid' : 'paid',
             form.isUnpaid ? form.due_date : null,
             form.account_id,
@@ -144,9 +147,15 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
                         </div>
                     )}
 
-                    <div>
-                        <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>AMOUNT</label>
-                        <input type="number" step="0.01" min="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" required />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>AMOUNT</label>
+                            <input type="number" step="0.01" min="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" required />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.3px' }}>DATE</label>
+                            <input type="date" value={form.entry_date} onChange={e => setForm(f => ({ ...f, entry_date: e.target.value }))} required />
+                        </div>
                     </div>
 
                     <div style={{ background: 'var(--bg3)', padding: 12, borderRadius: 10, border: '1px solid var(--border1)' }}>

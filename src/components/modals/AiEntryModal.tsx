@@ -12,6 +12,7 @@ interface AiPreview {
   details: string
   type: string
   amount: number
+  entry_date?: string
 }
 
 const VALID_TYPES = ['Revenue', 'Cost of Sales', 'Operational Expenses', 'Other Income', 'Interest Expense', 'Tax Expense'] as const
@@ -46,7 +47,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
           messages: [
             { 
               role: "system", 
-              content: "Extract a ledger entry from user text. Return ONLY valid JSON: {\"details\":\"...\",\"type\":\"...\",\"amount\":number}. Type must be one of: Revenue, Cost of Sales, Operational Expenses, Other Income, Interest Expense, Tax Expense. Expenses are negative numbers, income positive. No explanation, no markdown, just JSON." 
+              content: "Extract a ledger entry from user text. Return ONLY valid JSON: {\"details\":\"...\",\"type\":\"...\",\"amount\":number, \"entry_date\": \"YYYY-MM-DD\"}. Type must be one of: Revenue, Cost of Sales, Operational Expenses, Other Income, Interest Expense, Tax Expense. Expenses are negative numbers, income positive. entry_date is optional, provide it ONLY if mentioned in text. No explanation, no markdown, just JSON." 
             },
             { role: "user", content: userInput }
           ]
@@ -84,7 +85,8 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
     if (!preview) return
     setIsConfirming(true)
 
-    const { error } = await addEntry(preview.details, preview.type, preview.amount)
+    const entryDate = preview.entry_date || new Date().toISOString().split('T')[0]
+    const { error } = await addEntry(preview.details, preview.type, preview.amount, entryDate)
 
     if (error) {
       toast.error(error)
@@ -230,6 +232,19 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
                         width: '100%', background: 'var(--bg2)', border: '1px solid var(--border2)', 
                         borderRadius: 10, padding: '10px 12px', color: preview.amount < 0 ? 'var(--red)' : 'var(--green)', 
                         fontSize: 14, fontWeight: 700, textAlign: 'right' 
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--text3)', marginBottom: 6, letterSpacing: '0.05em' }}>DATE</label>
+                    <input 
+                      type="date"
+                      value={preview.entry_date || new Date().toISOString().split('T')[0]} 
+                      onChange={e => setPreview({ ...preview, entry_date: e.target.value })}
+                      style={{ 
+                        width: '100%', background: 'var(--bg2)', border: '1px solid var(--border2)', 
+                        borderRadius: 10, padding: '10px 12px', color: 'var(--text1)', 
+                        fontSize: 14 
                       }}
                     />
                   </div>

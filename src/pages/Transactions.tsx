@@ -107,8 +107,8 @@ export default function Transactions() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
-                {['', 'SR', 'Details', 'Account', 'Contact', 'Amount', 'Actions'].map((h, i) => (
-                  <th key={h} style={{ textAlign: i >= 5 ? 'right' : 'left', padding: '11px 16px', fontSize: 10, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '0.5px', borderBottom: '1px solid var(--border1)', fontWeight: 500, background: 'var(--bg3)' }}>{h}</th>
+                {['', 'SR', 'Date', 'Details', 'Account', 'Contact', 'Amount', 'Actions'].map((h, i) => (
+                  <th key={h} style={{ textAlign: i >= 6 ? 'right' : 'left', padding: '11px 16px', fontSize: 10, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '0.5px', borderBottom: '1px solid var(--border1)', fontWeight: 500, background: 'var(--bg3)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -125,6 +125,7 @@ export default function Transactions() {
                     <StatusDot entry={entry} />
                   </td>
                   <td style={{ padding: '11px 16px', color: 'var(--text3)', fontFamily: 'DM Mono, monospace', fontSize: 11, borderBottom: '1px solid var(--border1)' }}>{entry.sr_no}</td>
+                  <td style={{ padding: '11px 16px', color: 'var(--text2)', fontFamily: 'DM Mono, monospace', fontSize: 11, borderBottom: '1px solid var(--border1)' }}>{entry.entry_date}</td>
                   <td style={{ padding: '11px 16px', borderBottom: '1px solid var(--border1)', color: 'var(--text1)' }}>
                     {editId === entry.id
                       ? <input value={editForm.details ?? ''} onChange={e => setEditForm(f => ({ ...f, details: e.target.value }))} style={{ padding: '5px 8px', fontSize: 12 }} />

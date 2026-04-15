@@ -9,6 +9,7 @@ export interface LedgerEntry {
   details: string
   type: string
   amount: number
+  entry_date: string
   account_id: string | null
   account_name: string | null
   account_subcategory: string | null
@@ -64,6 +65,7 @@ export function useLedger() {
     details: string,
     type: string,
     amount: number,
+    entry_date: string = new Date().toISOString().split('T')[0],
     payment_status: 'paid' | 'unpaid' = 'paid',
     due_date: string | null = null,
     account_id: string | null = null,
@@ -81,6 +83,7 @@ export function useLedger() {
       details,
       type,
       amount,
+      entry_date,
       account_id,
       account_name,
       account_subcategory,

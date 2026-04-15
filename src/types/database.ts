@@ -50,6 +50,7 @@ export interface Database {
           details: string
           type: string
           amount: number
+          entry_date: string
           created_at: string
           created_by: string
         }
@@ -60,6 +61,7 @@ export interface Database {
           details: string
           type: string
           amount: number
+          entry_date?: string
           created_at?: string
           created_by: string
         }
@@ -67,6 +69,7 @@ export interface Database {
           details?: string
           type?: string
           amount?: number
+          entry_date?: string
         }
       }
       subscriptions: {
