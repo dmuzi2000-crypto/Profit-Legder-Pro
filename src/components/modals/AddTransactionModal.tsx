@@ -150,6 +150,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
                             ))}
                         </datalist>
                     </div>
+                    </div>
 
                     {form.account_subcategory && (
                         <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'DM Mono, monospace', marginTop: -6 }}>
