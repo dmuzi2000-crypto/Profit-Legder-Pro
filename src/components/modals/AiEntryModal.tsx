@@ -84,22 +84,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
     if (!preview) return
     setIsConfirming(true)
 
-    // Match backend expectations if any (e.g., addEntry arguments)
-    // Looking at Transactions.tsx line 144:
-    // const { error } = await addEntry(aiPreview.details, aiPreview.type, normalizedAmount, 'paid', null, null, null, aiPreview.type, null, null)
-    
-    const { error } = await addEntry(
-      preview.details,
-      preview.type,
-      preview.amount,
-      'paid',
-      null,
-      null,
-      null,
-      preview.type,
-      null,
-      null
-    )
+    const { error } = await addEntry(preview.details, preview.type, preview.amount)
 
     if (error) {
       toast.error(error)
