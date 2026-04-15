@@ -42,7 +42,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: "llama3-8b-8192",
+          model: "llama-3.3-70b-versatile",
           messages: [
             { 
               role: "system", 
@@ -161,7 +161,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
                 onBlur={e => e.currentTarget.style.borderColor = 'var(--border1)'}
               />
               <div style={{ position: 'absolute', bottom: 12, right: 12, fontSize: 10, color: 'var(--text3)' }}>
-                Powered by Llama 3
+                Powered by Llama 3.3
               </div>
             </div>
 
