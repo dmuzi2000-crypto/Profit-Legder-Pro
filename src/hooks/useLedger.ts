@@ -21,7 +21,6 @@ export interface LedgerEntry {
   paid_amount: number
   created_at: string
   created_by: string
-  accounts?: { category: string } | null
 }
 
 // Maps old free-text type values → canonical subcategory names for legacy entries
@@ -41,7 +40,7 @@ function subcat(e: LedgerEntry): string {
 }
 
 function cat(e: LedgerEntry): string {
-  return e.accounts?.category ?? e.type
+  return e.type
 }
 
 export function useLedger() {
@@ -55,7 +54,7 @@ export function useLedger() {
     setIsLoading(true)
     const { data, error } = await (supabase as any)
       .from('ledger_entries')
-      .select('*, accounts(category)')
+      .select('*')
       .eq('tenant_id', tenant.id)
       .order('sr_no', { ascending: true })
 

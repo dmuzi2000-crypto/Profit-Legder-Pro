@@ -46,6 +46,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
     setIsLoading(true)
     try {
       const accountsList = accounts.map(a => `${a.id}: ${a.code} - ${a.name} (${a.category})`).join('\n')
+      const contactsList = contacts.map(c => `${c.name} (${c.type}${c.company ? ', ' + c.company : ''})`).join('\n')
       
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -58,7 +59,10 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
           messages: [
             { 
               role: "system", 
-              content: "Extract a ledger entry from user text. Return ONLY valid JSON: {\"details\":\"...\",\"account_id\":\"...\",\"account_name\":\"...\",\"amount\":number, \"entry_date\": \"YYYY-MM-DD\", \"contact_name\": \"...\"}. \n\nMatch the transaction to the most relevant account from this list:\n" + accountsList + "\n\nSet account_id (the ID before the colon) and account_name exactly. Expenses are negative numbers, income positive. entry_date and contact_name are optional. No explanation, no markdown, just JSON." 
+              content: "Extract a ledger entry from user text. Return ONLY valid JSON: {\"details\":\"...\",\"account_id\":\"...\",\"account_name\":\"...\",\"amount\":number, \"entry_date\": \"YYYY-MM-DD\", \"contact_name\": \"...\"}. \n\n" +
+                "Match the transaction to the most relevant account from this list:\n" + accountsList + "\n\n" +
+                "Match contact_name from this list if mentioned:\n" + contactsList + "\nIf no match leave contact_name as null.\n\n" +
+                "Set account_id (the ID before the colon) and account_name exactly. Expenses are negative numbers, income positive. entry_date and contact_name are optional. No explanation, no markdown, just JSON." 
             },
             { role: "user", content: userInput }
           ]
