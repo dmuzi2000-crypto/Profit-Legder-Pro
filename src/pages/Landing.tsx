@@ -56,8 +56,11 @@ function InlineMorphWord({ words }: { words: string[] }) {
       current2.style.opacity = "100%";
       current1.style.filter = "none";
       current1.style.opacity = "0%";
+      
+      // Ensure the text matches the current index exactly during cooldown
+      current2.textContent = words[textIndexRef.current % words.length];
     }
-  }, []);
+  }, [words]);
 
   useEffect(() => {
     let rafId: number;
@@ -78,13 +81,14 @@ function InlineMorphWord({ words }: { words: string[] }) {
     <span style={{ 
       position: 'relative', 
       display: 'inline-block', 
-      minWidth: '380px', 
-      height: '1em', 
-      verticalAlign: 'bottom',
-      marginLeft: '12px'
+      color: 'var(--green)',
+      marginLeft: '12px',
+      marginRight: '12px'
     }}>
-      <span ref={text1Ref} style={{ position: 'absolute', top: 0, left: 0, whiteSpace: 'nowrap' }} />
-      <span ref={text2Ref} style={{ position: 'absolute', top: 0, left: 0, whiteSpace: 'nowrap' }} />
+      {/* Current/Target word determines the width */}
+      <span ref={text2Ref} style={{ position: 'relative', display: 'inline' }} />
+      {/* Expiring word overlays on top */}
+      <span ref={text1Ref} style={{ position: 'absolute', top: 0, left: 0, width: '100%', whiteSpace: 'nowrap' }} />
     </span>
   );
 }
@@ -165,7 +169,9 @@ export default function Landing() {
           lineHeight: 1.1, 
           marginBottom: '40px',
           letterSpacing: '-1px',
-          display: 'block'
+          display: 'block',
+          whiteSpace: 'normal',
+          wordBreak: 'break-word'
         }}>
           The accounting platform your
           <InlineMorphWord words={morphWords} />
