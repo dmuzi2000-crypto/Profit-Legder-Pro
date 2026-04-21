@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '../hooks/useAuth'
 
+import { Waves } from '../components/Waves'
+import { MorphingText } from '../components/MorphingText'
+
 export default function Landing() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
@@ -56,25 +59,17 @@ export default function Landing() {
         justifyContent: 'space-between',
         padding: '60px'
       }}>
-        {/* Video Background */}
-        <video 
-          autoPlay 
-          loop 
-          muted 
-          playsInline 
-          style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover',
-            zIndex: 0,
-            opacity: 0.6
-          }}
-        >
-          <source src="/demo.mp4" type="video/mp4" />
-        </video>
+        {/* Waves Background */}
+        <Waves strokeColor="#1e2535" backgroundColor="#0a0c10" />
+
+        {/* Dark Overlay Gradient */}
+        <div style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          background: 'linear-gradient(to top, rgba(10,12,16,0.9) 0%, rgba(10,12,16,0.4) 60%, transparent 100%)',
+          zIndex: 0,
+          pointerEvents: 'none'
+        }} />
 
         {/* Overlay Content */}
         <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -87,16 +82,23 @@ export default function Landing() {
           </div>
 
           {/* Tagline & Features Bottom-Left */}
-          <div style={{ maxWidth: 540 }}>
+          <div style={{ maxWidth: 640 }}>
             <h1 style={{ 
               fontFamily: 'DM Serif Display, serif', 
               fontSize: '64px', 
               color: 'white', 
               lineHeight: 1.1, 
-              marginBottom: '32px',
+              marginBottom: '40px',
               letterSpacing: '-1px'
             }}>
-              The accounting platform your business deserves
+              The accounting platform your<br />
+              <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '16px', verticalAlign: 'bottom' }}>
+                <MorphingText 
+                  texts={["business", "agency", "startup", "e-commerce store", "consultancy", "freelance practice", "SaaS company"]} 
+                  style={{ width: '520px', height: '70px', color: 'white' }}
+                />
+                <span>deserves</span>
+              </div>
             </h1>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
