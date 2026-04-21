@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { useAuth } from './hooks/useAuth'
 import Landing from './pages/Landing'
-import AuthPage from './pages/AuthPage'
 import Onboarding from './pages/Onboarding'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
@@ -25,7 +24,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
-  if (!user) return <Navigate to="/auth" replace />
+  if (!user) return <Navigate to="/" replace />
   if (!tenant) return <Navigate to="/onboarding" replace />
   return <>{children}</>
 }
@@ -35,7 +34,7 @@ export default function App() {
     <>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/auth" element={<Navigate to="/" replace />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="dashboard" replace />} />
