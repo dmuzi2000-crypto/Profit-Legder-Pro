@@ -80,10 +80,9 @@ function InlineMorphWord({ words }: { words: string[] }) {
   return (
     <span style={{ 
       position: 'relative', 
-      display: 'inline-block', 
-      color: 'var(--green)',
-      marginLeft: '12px',
-      marginRight: '12px'
+      display: 'block', 
+      width: '100%',
+      color: 'var(--green)'
     }}>
       {/* Current/Target word determines the width */}
       <span ref={text2Ref} style={{ position: 'relative', display: 'inline' }} />
@@ -173,9 +172,9 @@ export default function Landing() {
           whiteSpace: 'normal',
           wordBreak: 'break-word'
         }}>
-          The accounting platform your
+          <div style={{ display: 'block' }}>The accounting platform your</div>
           <InlineMorphWord words={morphWords} />
-          deserves
+          <div style={{ display: 'block' }}>deserves</div>
         </h1>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -121,12 +121,12 @@ export function useLedger() {
   }
 
   const totals = {
-    revenue: entries.filter(e => cat(e) === 'Revenue').reduce((s, e) => s + Math.abs(e.amount), 0),
-    otherIncome: entries.filter(e => subcat(e) === 'Other Income').reduce((s, e) => s + Math.abs(e.amount), 0),
-    cogs: entries.filter(e => subcat(e) === 'Cost of Sales').reduce((s, e) => s + Math.abs(e.amount), 0),
-    opex: entries.filter(e => cat(e) === 'Expense' && !['Cost of Sales', 'Interest Expense', 'Tax Expense'].includes(subcat(e))).reduce((s, e) => s + Math.abs(e.amount), 0),
-    interest: entries.filter(e => subcat(e) === 'Interest Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
-    tax: entries.filter(e => subcat(e) === 'Tax Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    revenue: entries.filter(e => cat(e).trim().toLowerCase() === 'revenue').reduce((s, e) => s + Math.abs(e.amount), 0),
+    otherIncome: entries.filter(e => subcat(e).trim().toLowerCase() === 'other income').reduce((s, e) => s + Math.abs(e.amount), 0),
+    cogs: entries.filter(e => subcat(e).trim().toLowerCase() === 'cost of sales').reduce((s, e) => s + Math.abs(e.amount), 0),
+    opex: entries.filter(e => cat(e).trim().toLowerCase() === 'expense' && !['cost of sales', 'interest expense', 'tax expense'].includes(subcat(e).trim().toLowerCase())).reduce((s, e) => s + Math.abs(e.amount), 0),
+    interest: entries.filter(e => subcat(e).trim().toLowerCase() === 'interest expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    tax: entries.filter(e => subcat(e).trim().toLowerCase() === 'tax expense').reduce((s, e) => s + Math.abs(e.amount), 0),
 
     get grossProfit() { return this.revenue - this.cogs },
     get ebitda() { return this.grossProfit + this.otherIncome - this.opex },
@@ -135,13 +135,13 @@ export function useLedger() {
     // Outstanding Receivables (unpaid Revenue types)
     get outstandingAR() {
       return entries
-        .filter(e => cat(e) === 'Revenue' && e.payment_status !== 'paid')
+        .filter(e => cat(e).trim().toLowerCase() === 'revenue' && e.payment_status !== 'paid')
         .reduce((s, e) => s + Math.abs(e.amount - e.paid_amount), 0)
     },
     // Outstanding Payables (unpaid Expense types)
     get outstandingAP() {
       return entries
-        .filter(e => cat(e) === 'Expense' && e.payment_status !== 'paid')
+        .filter(e => cat(e).trim().toLowerCase() === 'expense' && e.payment_status !== 'paid')
         .reduce((s, e) => s + Math.abs(e.amount - e.paid_amount), 0)
     },
   }

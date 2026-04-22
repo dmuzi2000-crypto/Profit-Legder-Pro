@@ -112,6 +112,13 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
     }
   }
 
+  function normalizeType(raw: string): string {
+    const t = raw.trim().toLowerCase()
+    return VALID_TYPES.find(et => et.toLowerCase() === t) 
+      ?? VALID_TYPES.find(et => t.includes(et.toLowerCase().split(' ')[0]))
+      ?? 'Operational Expenses'
+  }
+
   async function handleConfirm() {
     if (!preview) return
     setIsConfirming(true)
@@ -127,7 +134,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
 
     const { error } = await addEntry(
       preview.details, 
-      entryType, 
+      normalizeType(entryType), 
       preview.amount, 
       entryDate, 
       preview.contact_name || null, 

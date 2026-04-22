@@ -54,12 +54,43 @@ export default function Transactions() {
 
   const [showAiModal, setShowAiModal] = useState(false)
 
+  // Filters
+  const [filterDateFrom, setFilterDateFrom] = useState('')
+  const [filterDateTo, setFilterDateTo] = useState('')
+  const [filterAmtMin, setFilterAmtMin] = useState('')
+  const [filterAmtMax, setFilterAmtMax] = useState('')
+  const [filterContact, setFilterContact] = useState('')
+  const [filterType, setFilterType] = useState('All')
+
   useEffect(() => {
     if (searchParams.get('action') === 'record-payment') {
       setShowPayments(true)
       setSearchParams({})
     }
+    const typeParam = searchParams.get('type')
+    const detailsParam = searchParams.get('details')
+    if (typeParam) setFilterType(typeParam)
+    if (detailsParam) setFilterContact(detailsParam)
   }, [searchParams, setSearchParams])
+
+  const clearFilters = () => {
+    setFilterDateFrom('')
+    setFilterDateTo('')
+    setFilterAmtMin('')
+    setFilterAmtMax('')
+    setFilterContact('')
+    setFilterType('All')
+  }
+
+  const filteredEntries = entries.filter(e => {
+    if (filterDateFrom && e.entry_date < filterDateFrom) return false
+    if (filterDateTo && e.entry_date > filterDateTo) return false
+    if (filterAmtMin && Math.abs(e.amount) < parseFloat(filterAmtMin)) return false
+    if (filterAmtMax && Math.abs(e.amount) > parseFloat(filterAmtMax)) return false
+    if (filterContact && !e.details.toLowerCase().includes(filterContact.toLowerCase())) return false
+    if (filterType !== 'All' && e.type !== filterType) return false
+    return true
+  })
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this transaction?')) return
@@ -69,7 +100,12 @@ export default function Transactions() {
   }
 
   async function handleEditSave(id: string) {
-    const { error } = await updateEntry(id, { details: editForm.details, type: editForm.type, amount: editForm.amount })
+    const { error } = await updateEntry(id, { 
+      details: editForm.details, 
+      type: editForm.type, 
+      amount: editForm.amount,
+      entry_date: editForm.entry_date
+    })
     if (error) toast.error(error)
     else { toast.success('Transaction updated'); setEditId(null) }
   }
@@ -79,7 +115,12 @@ export default function Transactions() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 56, background: 'var(--bg2)', borderBottom: '1px solid var(--border1)', display: 'flex', alignItems: 'center', padding: '0 28px', gap: 12 }}>
-        <h1 style={{ fontSize: 16, fontWeight: 600, margin: 0, flex: 1 }}>Transactions</h1>
+        <h1 style={{ fontSize: 16, fontWeight: 600, margin: 0, flex: 1 }}>
+          Transactions 
+          <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400, marginLeft: 12 }}>
+            Showing {filteredEntries.length} of {entries.length} entries
+          </span>
+        </h1>
         
         <button 
           id="ai-entry-btn"
@@ -102,6 +143,35 @@ export default function Transactions() {
 
 
 
+      {/* Filter Bar */}
+      <div style={{ height: 50, background: 'var(--bg2)', borderBottom: '1px solid var(--border1)', display: 'flex', alignItems: 'center', padding: '0 28px', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: 9, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '0.5px' }}>DATE</label>
+          <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} style={{ padding: '4px 8px', fontSize: 11, background: 'var(--bg3)', border: '1px solid var(--border1)', borderRadius: 6, color: 'var(--text1)' }} />
+          <span style={{ color: 'var(--text3)', fontSize: 10 }}>—</span>
+          <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} style={{ padding: '4px 8px', fontSize: 11, background: 'var(--bg3)', border: '1px solid var(--border1)', borderRadius: 6, color: 'var(--text1)' }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: 9, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '0.5px' }}>AMOUNT</label>
+          <input type="number" placeholder="Min" value={filterAmtMin} onChange={e => setFilterAmtMin(e.target.value)} style={{ padding: '4px 8px', fontSize: 11, width: 70, background: 'var(--bg3)', border: '1px solid var(--border1)', borderRadius: 6, color: 'var(--text1)' }} />
+          <input type="number" placeholder="Max" value={filterAmtMax} onChange={e => setFilterAmtMax(e.target.value)} style={{ padding: '4px 8px', fontSize: 11, width: 70, background: 'var(--bg3)', border: '1px solid var(--border1)', borderRadius: 6, color: 'var(--text1)' }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+          <label style={{ fontSize: 9, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '0.5px' }}>SEARCH</label>
+          <input type="text" placeholder="Vendor, customer or memo..." value={filterContact} onChange={e => setFilterContact(e.target.value)} style={{ padding: '4px 8px', fontSize: 11, flex: 1, background: 'var(--bg3)', border: '1px solid var(--border1)', borderRadius: 6, color: 'var(--text1)' }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: 9, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '0.5px' }}>TYPE</label>
+          <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ padding: '4px 8px', fontSize: 11, background: 'var(--bg3)', border: '1px solid var(--border1)', borderRadius: 6, color: 'var(--text1)' }}>
+            <option value="All">All types</option>
+            {VALID_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        {(filterDateFrom || filterDateTo || filterAmtMin || filterAmtMax || filterContact || filterType !== 'All') && (
+          <button onClick={clearFilters} style={{ background: 'none', border: 'none', color: 'var(--red)', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'Syne, sans-serif' }}>CLEAR</button>
+        )}
+      </div>
+
       <div style={{ flex: 1, overflowY: 'auto', padding: 28 }}>
         <div style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 16, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -114,10 +184,10 @@ export default function Transactions() {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={7} style={{ padding: 32, textAlign: 'center', color: 'var(--text3)' }}>Loading transactions...</td></tr>
-              ) : entries.length === 0 ? (
-                <tr><td colSpan={7} style={{ padding: 40, textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>No transactions yet. Click "Add Transaction" to get started.</td></tr>
-              ) : entries.map(entry => (
+                <tr><td colSpan={8} style={{ padding: 32, textAlign: 'center', color: 'var(--text3)' }}>Loading transactions...</td></tr>
+              ) : filteredEntries.length === 0 ? (
+                <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>No transactions found matching your filters.</td></tr>
+              ) : filteredEntries.map(entry => (
                 <tr key={entry.id} style={{ transition: 'background 0.1s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
@@ -125,7 +195,11 @@ export default function Transactions() {
                     <StatusDot entry={entry} />
                   </td>
                   <td style={{ padding: '11px 16px', color: 'var(--text3)', fontFamily: 'DM Mono, monospace', fontSize: 11, borderBottom: '1px solid var(--border1)' }}>{entry.sr_no}</td>
-                  <td style={{ padding: '11px 16px', color: 'var(--text2)', fontFamily: 'DM Mono, monospace', fontSize: 11, borderBottom: '1px solid var(--border1)' }}>{entry.entry_date}</td>
+                  <td style={{ padding: '11px 16px', borderBottom: '1px solid var(--border1)' }}>
+                    {editId === entry.id
+                      ? <input type="date" value={editForm.entry_date ?? ''} onChange={e => setEditForm(f => ({ ...f, entry_date: e.target.value }))} style={{ padding: '5px 8px', fontSize: 11, fontFamily: 'DM Mono, monospace' }} />
+                      : <span style={{ color: 'var(--text2)', fontFamily: 'DM Mono, monospace', fontSize: 11 }}>{entry.entry_date}</span>}
+                  </td>
                   <td style={{ padding: '11px 16px', borderBottom: '1px solid var(--border1)', color: 'var(--text1)' }}>
                     {editId === entry.id
                       ? <input value={editForm.details ?? ''} onChange={e => setEditForm(f => ({ ...f, details: e.target.value }))} style={{ padding: '5px 8px', fontSize: 12 }} />
@@ -135,7 +209,13 @@ export default function Transactions() {
                     {entry.contact_name ?? '—'}
                   </td>
                   <td style={{ padding: '11px 16px', borderBottom: '1px solid var(--border1)' }}>
-                    <AccountBadge entry={entry} />
+                    {editId === entry.id ? (
+                      <select value={editForm.type ?? ''} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))} style={{ padding: '4px 8px', fontSize: 11 }}>
+                        {VALID_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    ) : (
+                      <AccountBadge entry={entry} />
+                    )}
                   </td>
                   <td style={{ padding: '11px 16px', textAlign: 'right', fontFamily: 'DM Mono, monospace', borderBottom: '1px solid var(--border1)', color: EXPENSE_SUBCATS.includes(entry.account_subcategory ?? '') ? 'var(--red)' : 'var(--green)' }}>
                     {editId === entry.id
@@ -151,7 +231,7 @@ export default function Transactions() {
                         </>
                       ) : (
                         <>
-                          <button onClick={() => { setEditId(entry.id); setEditForm({ details: entry.details, type: entry.type, amount: entry.amount }) }}
+                          <button onClick={() => { setEditId(entry.id); setEditForm({ details: entry.details, type: entry.type, amount: entry.amount, entry_date: entry.entry_date }) }}
                             style={{ background: 'none', border: 'none', color: 'var(--text3)', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                             onMouseEnter={e => (e.currentTarget.style.color = 'var(--blue)')}
                             onMouseLeave={e => (e.currentTarget.style.color = 'var(--text3)')}>

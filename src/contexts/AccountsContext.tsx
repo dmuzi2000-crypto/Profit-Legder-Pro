@@ -29,23 +29,23 @@ export const CAT_COLORS: Record<Category, { bg: string; color: string }> = {
 }
 
 const SEED: Account[] = [
-  { id: '1',  code: '1000', name: 'Cash & Bank',            category: 'Asset',     subcategory: 'Current Asset',      balance: 84200 },
+  { id: '1',  code: '1000', name: 'Cash & Bank',            category: 'Asset',     subcategory: 'Current Asset',      balance: 0 },
   { id: '2',  code: '1100', name: 'Accounts Receivable',    category: 'Asset',     subcategory: 'Current Asset',      balance: 32400 },
-  { id: '3',  code: '1200', name: 'Inventory',              category: 'Asset',     subcategory: 'Current Asset',      balance: 18600 },
-  { id: '4',  code: '1500', name: 'Equipment',              category: 'Asset',     subcategory: 'Fixed Asset',        balance: 45000 },
+  { id: '3',  code: '1200', name: 'Inventory',              category: 'Asset',     subcategory: 'Current Asset',      balance: 0 },
+  { id: '4',  code: '1500', name: 'Equipment',              category: 'Asset',     subcategory: 'Fixed Asset',        balance: 0 },
   { id: '5',  code: '2000', name: 'Accounts Payable',       category: 'Liability', subcategory: 'Current Liability',  balance: 14300 },
-  { id: '6',  code: '2100', name: 'Accrued Expenses',       category: 'Liability', subcategory: 'Current Liability',  balance: 6200  },
-  { id: '7',  code: '2500', name: 'Long-term Loan',         category: 'Liability', subcategory: 'Long-term Liability',balance: 50000 },
-  { id: '8',  code: '3000', name: "Owner's Capital",        category: 'Equity',    subcategory: 'Owner Equity',       balance: 75000 },
-  { id: '9',  code: '3100', name: 'Retained Earnings',      category: 'Equity',    subcategory: 'Retained Earnings',  balance: 34700 },
-  { id: '10', code: '4000', name: 'Product Sales',          category: 'Revenue',   subcategory: 'Operating Revenue',  balance: 142500},
-  { id: '11', code: '4100', name: 'Service Revenue',        category: 'Revenue',   subcategory: 'Operating Revenue',  balance: 38200 },
-  { id: '12', code: '5000', name: 'Cost of Goods Sold',     category: 'Expense',   subcategory: 'Cost of Sales',      balance: 62000 },
-  { id: '13', code: '6000', name: 'Payroll',                category: 'Expense',   subcategory: 'Operating Expense',  balance: 45000 },
-  { id: '14', code: '6100', name: 'Software Subscriptions', category: 'Expense',   subcategory: 'Operating Expense',  balance: 8200  },
-  { id: '15', code: '6200', name: 'Rent & Utilities',       category: 'Expense',   subcategory: 'Operating Expense',  balance: 12000 },
-  { id: '16', code: '7000', name: 'Interest Expense',       category: 'Expense',   subcategory: 'Interest Expense',   balance: 3400  },
-  { id: '17', code: '8000', name: 'Income Tax',             category: 'Expense',   subcategory: 'Tax Expense',        balance: 14800 },
+  { id: '6',  code: '2100', name: 'Accrued Expenses',       category: 'Liability', subcategory: 'Current Liability',  balance: 0  },
+  { id: '7',  code: '2500', name: 'Long-term Loan',         category: 'Liability', subcategory: 'Long-term Liability',balance: 0 },
+  { id: '8',  code: '3000', name: "Owner's Capital",        category: 'Equity',    subcategory: 'Owner Equity',       balance: 0 },
+  { id: '9',  code: '3100', name: 'Retained Earnings',      category: 'Equity',    subcategory: 'Retained Earnings',  balance: 0 },
+  { id: '10', code: '4000', name: 'Product Sales',          category: 'Revenue',   subcategory: 'Operating Revenue',  balance: 0},
+  { id: '11', code: '4100', name: 'Service Revenue',        category: 'Revenue',   subcategory: 'Operating Revenue',  balance: 0 },
+  { id: '12', code: '5000', name: 'Cost of Goods Sold',     category: 'Expense',   subcategory: 'Cost of Sales',      balance: 0 },
+  { id: '13', code: '6000', name: 'Payroll',                category: 'Expense',   subcategory: 'Operating Expense',  balance: 0 },
+  { id: '14', code: '6100', name: 'Software Subscriptions', category: 'Expense',   subcategory: 'Operating Expense',  balance: 0  },
+  { id: '15', code: '6200', name: 'Rent & Utilities',       category: 'Expense',   subcategory: 'Operating Expense',  balance: 0 },
+  { id: '16', code: '7000', name: 'Interest Expense',       category: 'Expense',   subcategory: 'Interest Expense',   balance: 0  },
+  { id: '17', code: '8000', name: 'Income Tax',             category: 'Expense',   subcategory: 'Tax Expense',        balance: 0 },
 ]
 
 interface AccountsContextType {
@@ -58,7 +58,7 @@ interface AccountsContextType {
 const AccountsContext = createContext<AccountsContextType | null>(null)
 
 export function AccountsProvider({ children }: { children: ReactNode }) {
-  const [accounts, setAccounts] = useState<Account[]>(SEED)
+  const [accounts, setAccounts] = useState<Account[]>(() => SEED.map(a => ({ ...a })))
 
   function addAccount(a: Omit<Account, 'id'>) {
     const newAcc: Account = { ...a, id: Date.now().toString() }

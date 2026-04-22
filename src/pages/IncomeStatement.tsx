@@ -1,7 +1,38 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useLedger } from '../hooks/useLedger'
 import { useAccounts } from '../contexts/AccountsContext'
 import { Calendar, Filter } from 'lucide-react'
+
+const TITLE_TO_TYPE: Record<string, string> = {
+  'Revenue': 'Revenue',
+  'Cost of Goods Sold': 'Cost of Sales',
+  'Operating Expenses': 'Operational Expenses',
+  'Other Income': 'Other Income',
+  'Interest Expense': 'Interest Expense',
+  'Tax Expense': 'Tax Expense'
+}
+
+function AmountLink({ amount, onClick, disabled }: { amount: string; onClick: () => void; disabled?: boolean }) {
+  const [hover, setHover] = useState(false)
+  if (disabled) return <span>{amount}</span>
+
+  return (
+    <button 
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background: 'none', border: 'none', padding: 0, color: 'inherit', font: 'inherit', cursor: 'pointer',
+        display: 'inline-flex', alignItems: 'center', transition: 'all 0.15s',
+        textDecoration: hover ? 'underline' : 'none'
+      }}
+    >
+      {amount}
+      <span style={{ fontSize: 9, marginLeft: 3, opacity: hover ? 1 : 0, transition: 'opacity 0.15s' }}>↗</span>
+    </button>
+  )
+}
 
 function fmtPos(n: number) {
   return '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -49,8 +80,11 @@ function resolveSubcat(e: { account_subcategory: string | null; type: string }) 
 }
 
 export default function IncomeStatement() {
+  const navigate = useNavigate()
   const { entries, isLoading } = useLedger()
   const { accounts } = useAccounts()
+  
+  const grouped = (type: string) => filteredEntries.filter(e => e.type.trim().toLowerCase() === type.trim().toLowerCase())
   
   const [from, setFrom] = useState(toDS(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
   const [to, setTo] = useState(toDS(new Date()))
@@ -79,12 +113,12 @@ export default function IncomeStatement() {
   })
 
   const localTotals = {
-    revenue: filteredEntries.filter(e => resolveSubcat(e) === 'Operating Revenue').reduce((s, e) => s + Math.abs(e.amount), 0),
-    otherIncome: filteredEntries.filter(e => resolveSubcat(e) === 'Other Income').reduce((s, e) => s + Math.abs(e.amount), 0),
-    cogs: filteredEntries.filter(e => resolveSubcat(e) === 'Cost of Sales').reduce((s, e) => s + Math.abs(e.amount), 0),
-    opex: filteredEntries.filter(e => resolveSubcat(e) === 'Operating Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
-    interest: filteredEntries.filter(e => resolveSubcat(e) === 'Interest Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
-    tax: filteredEntries.filter(e => resolveSubcat(e) === 'Tax Expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    revenue: filteredEntries.filter(e => resolveSubcat(e).trim().toLowerCase() === 'operating revenue').reduce((s, e) => s + Math.abs(e.amount), 0),
+    otherIncome: filteredEntries.filter(e => resolveSubcat(e).trim().toLowerCase() === 'other income').reduce((s, e) => s + Math.abs(e.amount), 0),
+    cogs: filteredEntries.filter(e => resolveSubcat(e).trim().toLowerCase() === 'cost of sales').reduce((s, e) => s + Math.abs(e.amount), 0),
+    opex: filteredEntries.filter(e => resolveSubcat(e).trim().toLowerCase() === 'operating expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    interest: filteredEntries.filter(e => resolveSubcat(e).trim().toLowerCase() === 'interest expense').reduce((s, e) => s + Math.abs(e.amount), 0),
+    tax: filteredEntries.filter(e => resolveSubcat(e).trim().toLowerCase() === 'tax expense').reduce((s, e) => s + Math.abs(e.amount), 0),
     get grossProfit() { return this.revenue - this.cogs },
     get ebitda() { return this.grossProfit + this.otherIncome - this.opex },
     get netProfit() { return this.ebitda - this.interest - this.tax }
@@ -170,7 +204,12 @@ export default function IncomeStatement() {
                           {acc.name}
                         </span>
                         <span style={{ fontFamily: 'DM Mono, monospace', color: sum > 0 ? color : 'var(--text3)' }}>
-                          {section.isExpense && sum > 0 ? '- ' : ''}{fmtPos(sum)}
+                          {section.isExpense && sum > 0 ? '- ' : ''}
+                          <AmountLink 
+                            amount={fmtPos(sum)} 
+                            disabled={sum === 0}
+                            onClick={() => navigate(`/app/transactions?type=${TITLE_TO_TYPE[section.title]}&details=${acc.name}`)} 
+                          />
                         </span>
                       </div>
                     ))}
@@ -179,7 +218,11 @@ export default function IncomeStatement() {
                       <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 16px 7px 32px', borderBottom: '1px solid var(--border1)', fontSize: 13 }}>
                         <span style={{ color: 'var(--text2)', fontStyle: 'italic' }}>{label} (legacy)</span>
                         <span style={{ fontFamily: 'DM Mono, monospace', color }}>
-                          {section.isExpense && sum > 0 ? '- ' : ''}{fmtPos(sum)}
+                          {section.isExpense && sum > 0 ? '- ' : ''}
+                          <AmountLink 
+                            amount={fmtPos(sum)} 
+                            onClick={() => navigate(`/app/transactions?type=${TITLE_TO_TYPE[section.title]}&details=${label}`)} 
+                          />
                         </span>
                       </div>
                     ))}
@@ -187,7 +230,12 @@ export default function IncomeStatement() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text2)', borderBottom: '1px solid var(--border2)' }}>
                       <span>Total {section.title}</span>
                       <span style={{ fontFamily: 'DM Mono, monospace', color }}>
-                        {section.isExpense && sectionTotal > 0 ? '- ' : ''}{fmtPos(sectionTotal)}
+                        {section.isExpense && sectionTotal > 0 ? '- ' : ''}
+                        <AmountLink 
+                          amount={fmtPos(sectionTotal)} 
+                          disabled={sectionTotal === 0}
+                          onClick={() => navigate(`/app/transactions?type=${TITLE_TO_TYPE[section.title]}`)} 
+                        />
                       </span>
                     </div>
 

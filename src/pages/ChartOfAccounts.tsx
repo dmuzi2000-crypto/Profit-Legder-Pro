@@ -13,6 +13,9 @@ function fmt(n: number) {
 
 const EMPTY = { code: '', name: '', category: 'Asset' as Category, subcategory: 'Current Asset', balance: '' }
 
+const isBalanceEditable = (acc: { name: string }) => 
+  acc.name === 'Accounts Receivable' || acc.name === 'Accounts Payable'
+
 export default function ChartOfAccounts() {
   const { accounts, isLoading, addAccount, updateAccount, deleteAccount } = useAccounts()
   const [showModal, setShowModal] = useState(false)
@@ -36,12 +39,16 @@ export default function ChartOfAccounts() {
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!form.code || !form.name) return
+
+    const isEditable = (form.category === 'Asset' && form.subcategory === 'Current Asset' && form.name.toLowerCase().includes('receivable')) || 
+                       (form.category === 'Liability' && form.subcategory === 'Current Liability' && form.name.toLowerCase().includes('payable'))
+
     const { error } = await addAccount({
       code: form.code,
       name: form.name,
       category: form.category,
       subcategory: form.subcategory,
-      balance: parseFloat(String(form.balance)) || 0,
+      balance: isEditable ? (parseFloat(String(form.balance)) || 0) : 0,
     })
     if (error) toast.error(error)
     else {
@@ -130,7 +137,9 @@ export default function ChartOfAccounts() {
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'DM Mono, monospace', color: CAT_COLORS[cat].color }}>
                       {editId === acc.id
-                        ? <input type="number" value={editForm.balance ?? ''} onChange={e => setEditForm(f => ({ ...f, balance: parseFloat(e.target.value) }))} style={{ padding: '4px 8px', fontSize: 12, width: 110, textAlign: 'right' }} />
+                        ? isBalanceEditable(acc)
+                          ? <input type="number" value={editForm.balance ?? ''} onChange={e => setEditForm(f => ({ ...f, balance: parseFloat(e.target.value) }))} style={{ padding: '4px 8px', fontSize: 12, width: 110, textAlign: 'right' }} />
+                          : <span title="Derived from transactions" style={{ cursor: 'help', color: 'var(--text3)' }}>—</span>
                         : fmt(acc.balance)}
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>
@@ -194,7 +203,12 @@ export default function ChartOfAccounts() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 6 }}>OPENING BALANCE</label>
-                <input type="number" step="0.01" value={form.balance} onChange={e => setForm(f => ({ ...f, balance: e.target.value }))} placeholder="0.00" />
+                {((form.category === 'Asset' && form.subcategory === 'Current Asset' && form.name.toLowerCase().includes('receivable')) || 
+                  (form.category === 'Liability' && form.subcategory === 'Current Liability' && form.name.toLowerCase().includes('payable'))) ? (
+                  <input type="number" step="0.01" value={form.balance} onChange={e => setForm(f => ({ ...f, balance: e.target.value }))} placeholder="0.00" />
+                ) : (
+                  <div style={{ fontSize: 12, color: 'var(--text3)', fontStyle: 'italic', padding: '8px 0' }}>Balance is auto-calculated from transactions</div>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
                 <button type="button" onClick={() => setShowModal(false)} style={{ padding: '8px 16px', background: 'var(--bg3)', border: '1px solid var(--border2)', borderRadius: 8, color: 'var(--text2)', fontFamily: 'Syne, sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
