@@ -132,6 +132,7 @@ export default function AiEntryModal({ isOpen, onClose }: AiEntryModalProps) {
       if (acc) entryType = acc.subcategory
     }
 
+    console.log({ entryType, account_id: preview.account_id, account_name: preview.account_name, entry_date: entryDate })
     const { error } = await addEntry(
       preview.details, 
       normalizeType(entryType), 

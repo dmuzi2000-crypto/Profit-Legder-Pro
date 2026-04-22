@@ -108,7 +108,7 @@ export default function IncomeStatement() {
   }
 
   const filteredEntries = entries.filter(e => {
-    const date = e.created_at.split('T')[0]
+    const date = (e.entry_date ?? e.created_at.split('T')[0])
     return date >= from && date <= to
   })
 
