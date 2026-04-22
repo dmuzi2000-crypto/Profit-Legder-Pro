@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, X, Check, Building2, User } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Check, Building2, User, Download, Upload } from 'lucide-react'
 import { useContacts } from '../hooks/useContacts'
+import { parseCSV, downloadCSV } from '../utils/csvUtils'
 import type { Contact } from '../types/database'
 
 type ContactType = Contact['type']
@@ -26,6 +27,79 @@ export default function VendorsCustomers() {
   const [editId, setEditId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<Contact>>({})
   const [search, setSearch] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  function downloadSampleCSV() {
+    const headers = ['type', 'name', 'email', 'phone', 'company', 'address', 'balance', 'status']
+    const rows = [
+      ['Customer', 'John Smith', 'john@acme.com', '+1 555-0100', 'Acme Corp', '123 Main St', '5000', 'Active'],
+      ['Vendor', 'Office Depot', 'ap@officedepot.com', '+1 800-463-3768', 'Office Depot', '200 Supply Rd', '-2000', 'Active'],
+      ['Both', 'DataSync Ltd', 'hello@datasync.io', '+1 555-0199', 'DataSync Ltd', '77 Tech Blvd', '1500', 'Active']
+    ]
+    downloadCSV('contacts_sample.csv', headers, rows)
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    try {
+      const text = await file.text()
+      const data = parseCSV(text)
+      if (data.length === 0) {
+        toast.error('No valid rows found. Check headers match the sample.')
+        return
+      }
+
+      let imported = 0
+      for (const row of data) {
+        const { type, name, email, phone, company, address, balance, status } = row
+        if (!name) continue
+
+        const finalType = (['Customer', 'Vendor', 'Both'].includes(type) ? type : 'Customer') as ContactType
+        const finalStatus = (['Active', 'Inactive'].includes(status) ? status : 'Active') as 'Active' | 'Inactive'
+        const finalBalance = parseFloat(balance) || 0
+
+        const { error } = await addContact({
+          type: finalType,
+          name,
+          email: email || '',
+          phone: phone || '',
+          company: company || '',
+          address: address || '',
+          balance: finalBalance,
+          status: finalStatus
+        })
+        if (!error) imported++
+      }
+      
+      if (imported > 0) {
+        toast.success(`Imported ${imported} contacts`)
+      } else {
+        toast.error('No valid contacts were imported.')
+      }
+    } catch (err) {
+      toast.error('Failed to parse CSV')
+      console.error(err)
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const secondaryBtn = {
+    background: 'var(--bg3)',
+    border: '1px solid var(--border2)',
+    color: 'var(--text2)',
+    padding: '7px 14px',
+    borderRadius: 8,
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    fontFamily: 'Syne, sans-serif'
+  }
 
   const filtered = contacts
     .filter(c => tab === 'All' || c.type === tab)
@@ -78,6 +152,17 @@ export default function VendorsCustomers() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 56, background: 'var(--bg2)', borderBottom: '1px solid var(--border1)', display: 'flex', alignItems: 'center', padding: '0 28px', gap: 12 }}>
         <h1 style={{ fontSize: 16, fontWeight: 600, margin: 0, flex: 1 }}>Vendors & Customers</h1>
+        
+        <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImport} />
+        
+        <button onClick={downloadSampleCSV} style={secondaryBtn}>
+          <Download size={14} /> Sample CSV
+        </button>
+        
+        <button onClick={() => fileInputRef.current?.click()} style={secondaryBtn}>
+          <Upload size={14} /> Import CSV
+        </button>
+
         <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green)', border: 'none', borderRadius: 8, color: '#0a0c10', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
           <Plus size={14} /> Add Contact
         </button>

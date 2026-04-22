@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Check, Download, Upload } from 'lucide-react'
 import { useAccounts } from '../hooks/useAccounts'
 import { CATEGORIES, SUBCATEGORIES, CAT_COLORS } from '../contexts/AccountsContext'
+import { parseCSV, downloadCSV } from '../utils/csvUtils'
 import type { Account } from '../types/database'
 import type { Category } from '../contexts/AccountsContext'
 
@@ -35,6 +36,99 @@ export default function ChartOfAccounts() {
     acc[cat] = accounts.filter(a => a.category === cat).reduce((s, a) => s + a.balance, 0)
     return acc
   }, {} as Record<Category, number>)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  function downloadSampleCSV() {
+    const headers = ['code', 'name', 'category', 'subcategory', 'balance']
+    const rows = [
+      ['6300', 'Office Supplies', 'Expense', 'Operating Expense', '0'],
+      ['6400', 'Marketing', 'Expense', 'Operating Expense', '0'],
+      ['1300', 'Prepaid Expenses', 'Asset', 'Current Asset', '0']
+    ]
+    downloadCSV('chart_of_accounts_sample.csv', headers, rows)
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    try {
+      const text = await file.text()
+      const data = parseCSV(text)
+      if (data.length === 0) {
+        toast.error('No valid rows found. Check headers match the sample.')
+        return
+      }
+
+      let imported = 0
+      let skipped = 0
+      const warnings: string[] = []
+
+      for (const row of data) {
+        const { code, name, category, subcategory, balance } = row
+        
+        // Validation
+        if (!code || !name || !CATEGORIES.includes(category as Category)) {
+          skipped++
+          continue
+        }
+
+        // Mapping subcategory
+        const validSubs = SUBCATEGORIES[category as Category]
+        const finalSub = validSubs.includes(subcategory) ? subcategory : validSubs[0]
+
+        // Balance logic: Only allow if name contains Receivable/Payable
+        const isEditable = name.toLowerCase().includes('receivable') || name.toLowerCase().includes('payable')
+        const finalBalance = isEditable ? (parseFloat(balance) || 0) : 0
+
+        // Check if code exists
+        if (accounts.some(a => a.code === code)) {
+          warnings.push(`Account code ${code} already exists.`)
+        }
+
+        const { error } = await addAccount({
+          code,
+          name,
+          category: category as Category,
+          subcategory: finalSub,
+          balance: finalBalance
+        })
+
+        if (!error) imported++
+        else skipped++
+      }
+
+      if (imported > 0) {
+        toast.success(`Imported ${imported} accounts (${skipped} skipped)`)
+        if (warnings.length > 0) {
+          console.warn('Import Warnings:', warnings)
+        }
+      } else {
+        toast.error('No valid accounts were imported.')
+      }
+    } catch (err) {
+      toast.error('Failed to parse CSV')
+      console.error(err)
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const secondaryBtn = {
+    background: 'var(--bg3)',
+    border: '1px solid var(--border2)',
+    color: 'var(--text2)',
+    padding: '7px 14px',
+    borderRadius: 8,
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    fontFamily: 'Syne, sans-serif'
+  }
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -81,6 +175,17 @@ export default function ChartOfAccounts() {
       {/* Topbar */}
       <div style={{ height: 56, background: 'var(--bg2)', borderBottom: '1px solid var(--border1)', display: 'flex', alignItems: 'center', padding: '0 28px', gap: 12 }}>
         <h1 style={{ fontSize: 16, fontWeight: 600, margin: 0, flex: 1 }}>Chart of Accounts</h1>
+        
+        <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImport} />
+        
+        <button onClick={downloadSampleCSV} style={secondaryBtn}>
+          <Download size={14} /> Sample CSV
+        </button>
+        
+        <button onClick={() => fileInputRef.current?.click()} style={secondaryBtn}>
+          <Upload size={14} /> Import CSV
+        </button>
+
         <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green)', border: 'none', borderRadius: 8, color: '#0a0c10', fontSize: 12, fontWeight: 700, fontFamily: 'Syne, sans-serif', cursor: 'pointer' }}>
           <Plus size={14} /> Add Account
         </button>

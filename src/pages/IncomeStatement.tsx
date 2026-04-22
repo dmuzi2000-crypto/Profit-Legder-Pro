@@ -165,30 +165,25 @@ export default function IncomeStatement() {
           ) : (
             <>
               {IS_SECTIONS.map((section, sectionIdx) => {
-                const sectionAccounts = accounts.filter(a => a.subcategory === section.subcat)
+                const sectionEntries = filteredEntries.filter(e => resolveSubcat(e).trim().toLowerCase() === section.subcat.trim().toLowerCase())
+                const groups: Record<string, { sum: number; code: string; name: string; isLegacy: boolean }> = {}
 
-                const rows = sectionAccounts.map(acc => {
-                  const matched = filteredEntries.filter(e => {
-                    if (e.account_id) return e.account_id === acc.id
-                    return resolveSubcat(e) === section.subcat
-                  })
-                  const sum = matched.reduce((s, e) => s + Math.abs(e.amount), 0)
-                  return { acc, sum }
+                sectionEntries.forEach(e => {
+                  const name = e.account_name || e.type || 'Unknown'
+                  if (!groups[name]) {
+                    const acc = accounts.find(a => (e.account_id && a.id === e.account_id) || a.name === name)
+                    groups[name] = {
+                      sum: 0,
+                      code: acc?.code || '',
+                      name: acc?.name || name,
+                      isLegacy: !acc
+                    }
+                  }
+                  groups[name].sum += Math.abs(e.amount)
                 })
 
-                const coveredIds = new Set(filteredEntries.filter(e => e.account_id).map(e => e.account_id))
-                const legacyEntries = filteredEntries.filter(e =>
-                  !e.account_id &&
-                  !coveredIds.has(e.id) &&
-                  resolveSubcat(e) === section.subcat
-                )
-                const legacyMap: Record<string, number> = {}
-                legacyEntries.forEach(e => {
-                  const key = e.type
-                  legacyMap[key] = (legacyMap[key] ?? 0) + Math.abs(e.amount)
-                })
-
-                const sectionTotal = rows.reduce((s, r) => s + r.sum, 0) + Object.values(legacyMap).reduce((s, v) => s + v, 0)
+                const sortedGroups = Object.values(groups).sort((a, b) => (a.code || '9999').localeCompare(b.code || '9999'))
+                const sectionTotal = sortedGroups.reduce((s, g) => s + g.sum, 0)
                 const color = section.isExpense ? 'var(--red)' : 'var(--green)'
 
                 return (
@@ -197,31 +192,18 @@ export default function IncomeStatement() {
                       <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text1)' }}>{section.title}</span>
                     </div>
 
-                    {rows.map(({ acc, sum }) => (
-                      <div key={acc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 16px 7px 32px', borderBottom: '1px solid var(--border1)', fontSize: 13 }}>
+                    {sortedGroups.map(group => (
+                      <div key={group.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 16px 7px 32px', borderBottom: '1px solid var(--border1)', fontSize: 13 }}>
                         <span style={{ color: 'var(--text2)' }}>
-                          <span style={{ color: 'var(--text3)', fontFamily: 'DM Mono, monospace', fontSize: 11, marginRight: 8 }}>{acc.code}</span>
-                          {acc.name}
+                          {group.code && <span style={{ color: 'var(--text3)', fontFamily: 'DM Mono, monospace', fontSize: 11, marginRight: 8 }}>{group.code}</span>}
+                          {group.name} {group.isLegacy && <span style={{ fontStyle: 'italic', opacity: 0.7 }}> (legacy)</span>}
                         </span>
-                        <span style={{ fontFamily: 'DM Mono, monospace', color: sum > 0 ? color : 'var(--text3)' }}>
-                          {section.isExpense && sum > 0 ? '- ' : ''}
+                        <span style={{ fontFamily: 'DM Mono, monospace', color: group.sum > 0 ? color : 'var(--text3)' }}>
+                          {section.isExpense && group.sum > 0 ? '- ' : ''}
                           <AmountLink 
-                            amount={fmtPos(sum)} 
-                            disabled={sum === 0}
-                            onClick={() => navigate(`/app/transactions?type=${TITLE_TO_TYPE[section.title]}&details=${acc.name}`)} 
-                          />
-                        </span>
-                      </div>
-                    ))}
-
-                    {Object.entries(legacyMap).map(([label, sum]) => (
-                      <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 16px 7px 32px', borderBottom: '1px solid var(--border1)', fontSize: 13 }}>
-                        <span style={{ color: 'var(--text2)', fontStyle: 'italic' }}>{label} (legacy)</span>
-                        <span style={{ fontFamily: 'DM Mono, monospace', color }}>
-                          {section.isExpense && sum > 0 ? '- ' : ''}
-                          <AmountLink 
-                            amount={fmtPos(sum)} 
-                            onClick={() => navigate(`/app/transactions?type=${TITLE_TO_TYPE[section.title]}&details=${label}`)} 
+                            amount={fmtPos(group.sum)} 
+                            disabled={group.sum === 0}
+                            onClick={() => navigate(`/app/transactions?type=${TITLE_TO_TYPE[section.title]}&details=${group.name}`)} 
                           />
                         </span>
                       </div>
