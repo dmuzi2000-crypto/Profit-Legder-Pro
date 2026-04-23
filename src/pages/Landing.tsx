@@ -2,8 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 
 import { Waves } from '../components/Waves'
+
+// ... (InlineMorphWord component remains same, I will keep it in the replacement block to avoid issues)
+// Actually I'll just use multi_replace if I want to be surgical, but I'll replace the whole thing or a large chunk.
+// I'll use multi_replace to be safer.
 
 // --- Inline Morphing Word Component ---
 const morphTime = 1.5;
@@ -104,12 +109,26 @@ export default function Landing() {
   const [password, setPassword] = useState('')
   const [company, setCompany] = useState('')
   const [loading, setLoading] = useState(false)
+  const [forgotMode, setForgotMode] = useState(false)
 
   useEffect(() => { if (user) navigate('/app') }, [user, navigate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+
+    if (forgotMode) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password'
+      })
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('Check your email for the reset link.')
+      }
+      setLoading(false)
+      return
+    }
 
     if (isSignup) {
       if (!company.trim()) { toast.error('Company name is required'); setLoading(false); return }
@@ -197,85 +216,141 @@ export default function Landing() {
         width: '400px' 
       }}>
         <div style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 24, padding: 40, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
-          <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 24, marginBottom: 8, color: 'var(--text1)' }}>
-            {isSignup ? 'Get started' : 'Welcome back'}
-          </h2>
-          <p style={{ color: 'var(--text3)', fontSize: 14, marginBottom: 24 }}>
-            {isSignup ? 'Create your workspace to begin tracking.' : 'Login to manage your business ledgers.'}
-          </p>
-
-          {/* Tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid var(--border1)', marginBottom: 24 }}>
-            {(['signin', 'signup'] as const).map(tab => (
+          {forgotMode ? (
+            <div>
               <button 
-                key={tab} 
-                onClick={() => setParams({ mode: tab })} 
-                style={{ 
-                  flex: 1, 
-                  padding: '12px 0', 
-                  background: 'none', 
-                  border: 'none', 
-                  borderBottom: `2px solid ${mode === tab ? 'var(--green)' : 'transparent'}`, 
-                  color: mode === tab ? 'var(--green)' : 'var(--text3)', 
-                  fontFamily: 'Syne, sans-serif', 
-                  fontSize: 13, 
-                  fontWeight: 600, 
-                  cursor: 'pointer', 
-                  marginBottom: -1, 
-                  transition: 'all 0.15s' 
-                }}
+                onClick={() => setForgotMode(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                {tab === 'signin' ? 'Sign in' : 'Create account'}
+                ← Back to sign in
               </button>
-            ))}
-          </div>
+              <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 24, marginBottom: 8, color: 'var(--text1)' }}>Reset password</h2>
+              <p style={{ color: 'var(--text3)', fontSize: 14, marginBottom: 24 }}>Enter your email and we'll send you a reset link.</p>
+              
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 8, letterSpacing: '0.5px' }}>EMAIL</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required />
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={loading} 
+                  style={{ 
+                    marginTop: 8, 
+                    background: 'var(--green)', 
+                    border: 'none', 
+                    color: '#0a0c10', 
+                    padding: '14px', 
+                    borderRadius: 12, 
+                    fontFamily: 'Syne, sans-serif', 
+                    fontSize: 14, 
+                    fontWeight: 700, 
+                    cursor: loading ? 'not-allowed' : 'pointer', 
+                    opacity: loading ? 0.7 : 1
+                  }}
+                >
+                  {loading ? 'Sending...' : 'Send reset link'}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <>
+              <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 24, marginBottom: 8, color: 'var(--text1)' }}>
+                {isSignup ? 'Get started' : 'Welcome back'}
+              </h2>
+              <p style={{ color: 'var(--text3)', fontSize: 14, marginBottom: 24 }}>
+                {isSignup ? 'Create your workspace to begin tracking.' : 'Login to manage your business ledgers.'}
+              </p>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            {isSignup && (
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 8, letterSpacing: '0.5px' }}>COMPANY NAME</label>
-                <input type="text" value={company} onChange={e => setCompany(e.target.value)} placeholder="Acme Corp" required={isSignup} />
+              {/* Tabs */}
+              <div style={{ display: 'flex', borderBottom: '1px solid var(--border1)', marginBottom: 24 }}>
+                {(['signin', 'signup'] as const).map(tab => (
+                  <button 
+                    key={tab} 
+                    onClick={() => { setParams({ mode: tab }); setForgotMode(false) }} 
+                    style={{ 
+                      flex: 1, 
+                      padding: '12px 0', 
+                      background: 'none', 
+                      border: 'none', 
+                      borderBottom: `2px solid ${mode === tab ? 'var(--green)' : 'transparent'}`, 
+                      color: mode === tab ? 'var(--green)' : 'var(--text3)', 
+                      fontFamily: 'Syne, sans-serif', 
+                      fontSize: 13, 
+                      fontWeight: 600, 
+                      cursor: 'pointer', 
+                      marginBottom: -1, 
+                      transition: 'all 0.15s' 
+                    }}
+                  >
+                    {tab === 'signin' ? 'Sign in' : 'Create account'}
+                  </button>
+                ))}
               </div>
-            )}
-            <div>
-              <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 8, letterSpacing: '0.5px' }}>EMAIL</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 8, letterSpacing: '0.5px' }}>PASSWORD</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" minLength={8} required />
-            </div>
-            <button 
-              type="submit" 
-              disabled={loading} 
-              style={{ 
-                marginTop: 8, 
-                background: 'var(--green)', 
-                border: 'none', 
-                color: '#0a0c10', 
-                padding: '14px', 
-                borderRadius: 12, 
-                fontFamily: 'Syne, sans-serif', 
-                fontSize: 14, 
-                fontWeight: 700, 
-                cursor: loading ? 'not-allowed' : 'pointer', 
-                opacity: loading ? 0.7 : 1,
-                transition: 'transform 0.1s active'
-              }}
-            >
-              {loading ? 'Please wait...' : isSignup ? 'Create account & workspace' : 'Sign in'}
-            </button>
-          </form>
 
-          <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: 'var(--text3)' }}>
-            {isSignup ? 'Already have an account? ' : "Don't have an account? "}
-            <button 
-              onClick={() => setParams({ mode: isSignup ? 'signin' : 'signup' })} 
-              style={{ background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', padding: 0, font: 'inherit', fontWeight: 600 }}
-            >
-              {isSignup ? 'Sign in' : 'Create one'}
-            </button>
-          </p>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {isSignup && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 8, letterSpacing: '0.5px' }}>COMPANY NAME</label>
+                    <input type="text" value={company} onChange={e => setCompany(e.target.value)} placeholder="Acme Corp" required={isSignup} />
+                  </div>
+                )}
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', marginBottom: 8, letterSpacing: '0.5px' }}>EMAIL</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <label style={{ fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'var(--text3)', letterSpacing: '0.5px', margin: 0 }}>PASSWORD</label>
+                    {!isSignup && (
+                      <button 
+                        type="button"
+                        onClick={() => setForgotMode(true)}
+                        style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 11, cursor: 'pointer', padding: 0, transition: 'color 0.15s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--green)'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text3)'}
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" minLength={8} required />
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={loading} 
+                  style={{ 
+                    marginTop: 8, 
+                    background: 'var(--green)', 
+                    border: 'none', 
+                    color: '#0a0c10', 
+                    padding: '14px', 
+                    borderRadius: 12, 
+                    fontFamily: 'Syne, sans-serif', 
+                    fontSize: 14, 
+                    fontWeight: 700, 
+                    cursor: loading ? 'not-allowed' : 'pointer', 
+                    opacity: loading ? 0.7 : 1,
+                    transition: 'transform 0.1s active'
+                  }}
+                >
+                  {loading ? 'Please wait...' : isSignup ? 'Create account & workspace' : 'Sign in'}
+                </button>
+              </form>
+            </>
+          )}
+
+          {!forgotMode && (
+            <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: 'var(--text3)' }}>
+              {isSignup ? 'Already have an account? ' : "Don't have an account? "}
+              <button 
+                onClick={() => setParams({ mode: isSignup ? 'signin' : 'signup' })} 
+                style={{ background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', padding: 0, font: 'inherit', fontWeight: 600 }}
+              >
+                {isSignup ? 'Sign in' : 'Create one'}
+              </button>
+            </p>
+          )}
         </div>
       </div>
     </div>

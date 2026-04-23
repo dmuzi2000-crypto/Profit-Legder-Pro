@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { useAuth } from './hooks/useAuth'
 import Landing from './pages/Landing'
+import AuthPage from './pages/AuthPage'
+import ResetPassword from './pages/ResetPassword'
 import Onboarding from './pages/Onboarding'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
@@ -34,7 +36,8 @@ export default function App() {
     <>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/auth" element={<Navigate to="/" replace />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="dashboard" replace />} />
@@ -53,3 +56,4 @@ export default function App() {
     </>
   )
 }
+
