@@ -7,29 +7,40 @@ export default function ResetPassword() {
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [recoverySessionActive, setRecoverySessionActive] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false) // for form submit
+  const [ready, setReady] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setRecoverySessionActive(true)
+    let mounted = true
+
+    // 1. Check current session immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted && session) {
+        setReady(true)
       }
     })
 
-    // Timeout if event never fires (e.g. invalid link)
-    const timeout = setTimeout(() => {
-      if (!recoverySessionActive) {
-        setError('Invalid or expired reset link.')
+    // 2. Listen for recovery event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (mounted && event === 'PASSWORD_RECOVERY') {
+        setReady(true)
       }
-    }, 5000)
+    })
+
+    // 3. Error timeout
+    const timeout = setTimeout(() => {
+      if (mounted && !ready) {
+        setError(true)
+      }
+    }, 3000)
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
       clearTimeout(timeout)
     }
-  }, [recoverySessionActive])
+  }, [ready])
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault()
@@ -59,13 +70,13 @@ export default function ResetPassword() {
       <div style={{ minHeight: '100vh', background: 'var(--bg1)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--border1)', borderRadius: 16, padding: 32 }}>
-            <div style={{ color: 'var(--red)', marginBottom: 16 }}>
+            <div style={{ color: '#ff4b4b', marginBottom: 16 }}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto' }}>
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
             </div>
             <h2 style={{ color: 'var(--text1)', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Link Error</h2>
-            <p style={{ color: 'var(--text3)', fontSize: 14, marginBottom: 24 }}>{error}</p>
+            <p style={{ color: 'var(--text3)', fontSize: 14, marginBottom: 24 }}>Invalid or expired reset link.</p>
             <Link to="/auth?mode=signin" style={{ color: 'var(--green)', textDecoration: 'none', fontWeight: 600 }}>Back to sign in</Link>
           </div>
         </div>
@@ -73,7 +84,7 @@ export default function ResetPassword() {
     )
   }
 
-  if (!recoverySessionActive) {
+  if (!ready) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
@@ -117,3 +128,4 @@ export default function ResetPassword() {
     </div>
   )
 }
+
